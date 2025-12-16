@@ -1,26 +1,32 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
+import { supabase } from '../lib/supabaseClient';
 
 export default function VisitorTracker() {
     const [location] = useLocation();
+    const hasLogged = useRef(false);
 
     useEffect(() => {
-        // Call PHP backend
+        if (hasLogged.current === location) return;
+
         const track = async () => {
             try {
-                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-                const apiKey = import.meta.env.VITE_API_KEY || '';
+                // Get basic info
+                const userAgent = navigator.userAgent;
+                const referrer = document.referrer;
 
-                await fetch(`${apiUrl}/track_visitor.php`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-KEY': apiKey
-                    },
-                    body: JSON.stringify({ page: location }),
-                });
+                // Supabase Insert
+                await supabase.from('visitors').insert([
+                    {
+                        page_visited: location,
+                        user_agent: userAgent,
+                        referrer: referrer
+                    }
+                ]);
+
+                hasLogged.current = location;
             } catch (e) {
-                console.error("Tracking failed", e);
+                console.error("Tracking error:", e);
             }
         };
 

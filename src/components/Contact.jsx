@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabaseClient';
 
 const SectionWrapper = ({ children, delay = 0 }) => (
     <motion.div
@@ -42,50 +43,91 @@ const SocialIcon = ({ href, path, colorClass }) => (
 
 export default function Contact() {
     const [comments, setComments] = useState([]);
+
+    // Comment Form State
     const [name, setName] = useState('');
     const [msg, setMsg] = useState('');
+
+    // Contact Form State
+    const [contactName, setContactName] = useState('');
+    const [contactEmail, setContactEmail] = useState('');
+    const [contactMsg, setContactMsg] = useState('');
+    const [contactStatus, setContactStatus] = useState('');
+
     const [refresh, setRefresh] = useState(0);
 
     // Common card style to ensure unified look
     const cardStyle = "bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-cyan-500/10 transition-shadow h-full";
 
     useEffect(() => {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-        const apiKey = import.meta.env.VITE_API_KEY || '';
-
-        fetch(`${apiUrl}/get_comments.php`, {
-            headers: {
-                'X-API-KEY': apiKey
-            }
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setComments(data);
-            })
-            .catch(err => console.error(err));
+        fetchComments();
     }, [refresh]);
 
-    const handleSubmit = async (e) => {
+    const fetchComments = async () => {
+        try {
+            console.log("Supabase: Fetching comments...");
+            let { data, error } = await supabase
+                .from('comments')
+                .select('*')
+                .order('is_pinned', { ascending: false }) // Pinned first
+                .order('created_at', { ascending: false }); // Then newest
+
+            if (error) {
+                console.error("Supabase Error:", error);
+                setComments([]);
+                throw error;
+            }
+
+            if (data) {
+                setComments(data);
+            }
+        } catch (error) {
+            console.error('Error fetching comments:', error.message);
+        }
+    };
+
+    const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!name || !msg) return;
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-            const apiKey = import.meta.env.VITE_API_KEY || '';
+            // Simple admin check
+            const is_author = (name.toLowerCase() === 'arya toni saputra');
 
-            await fetch(`${apiUrl}/post_comment.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': apiKey
-                },
-                body: JSON.stringify({ name, message: msg })
-            });
+            const { error } = await supabase
+                .from('comments')
+                .insert([{ name, message: msg, is_author }]);
+
+            if (error) throw error;
+
             setMsg('');
             setName('');
             setRefresh(prev => prev + 1);
         } catch (err) {
-            console.error(err);
+            console.error('Error posting comment:', err.message);
+        }
+    };
+
+    const handleContactSubmit = async (e) => {
+        e.preventDefault();
+        if (!contactName || !contactEmail || !contactMsg) return;
+        setContactStatus('Sending...');
+
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .insert([{ name: contactName, email: contactEmail, message: contactMsg }]);
+
+            if (error) throw error;
+
+            setContactStatus('Message Sent! 🚀');
+            setContactName('');
+            setContactEmail('');
+            setContactMsg('');
+            setTimeout(() => setContactStatus(''), 3000);
+        } catch (err) {
+            console.error('Error sending message:', err.message);
+            setContactStatus('Failed to send.');
         }
     };
 
@@ -108,16 +150,34 @@ export default function Contact() {
                             <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
                                 <span className="mr-2"></span> Hubungi Saya
                             </h3>
-                            <form className="space-y-4">
-                                <input type="text" placeholder="Nama Anda" className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500" />
-                                <input type="email" placeholder="Email Anda" className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500" />
-                                <textarea rows="4" placeholder="Pesan Anda" className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"></textarea>
+                            <form onSubmit={handleContactSubmit} className="space-y-4">
+                                <input
+                                    type="text"
+                                    placeholder="Nama Anda"
+                                    value={contactName}
+                                    onChange={e => setContactName(e.target.value)}
+                                    className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                />
+                                <input
+                                    type="email"
+                                    placeholder="Email Anda"
+                                    value={contactEmail}
+                                    onChange={e => setContactEmail(e.target.value)}
+                                    className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                />
+                                <textarea
+                                    rows="4"
+                                    placeholder="Pesan Anda"
+                                    value={contactMsg}
+                                    onChange={e => setContactMsg(e.target.value)}
+                                    className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                ></textarea>
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg"
                                 >
-                                    Kirim Pesan
+                                    {contactStatus || 'Kirim Pesan'}
                                 </motion.button>
                             </form>
                         </div>
@@ -125,7 +185,7 @@ export default function Contact() {
 
                     {/* Modern Comment Board */}
                     <SectionWrapper delay={0.4}>
-                        <div className={`${cardStyle} flex flex-col relative overflow-hidden h-[600px]`}>
+                        <div className="bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-cyan-500/10 transition-shadow flex flex-col relative overflow-hidden h-[600px]">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
 
                             <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
@@ -133,7 +193,7 @@ export default function Contact() {
                             </h3>
 
                             {/* Scrollable Comments */}
-                            <div className="flex-1 overflow-y-auto space-y-4 mb-6 pr-2 custom-scrollbar">
+                            <div className="flex-1 overflow-y-auto space-y-4 mb-6 pr-2 custom-scrollbar scroll-smooth">
                                 {comments.length === 0 && (
                                     <div className="text-center text-gray-500 py-10">No comments yet. Be the first!</div>
                                 )}
@@ -142,15 +202,17 @@ export default function Contact() {
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         key={c.id}
-                                        className={`group flex gap-3 p-4 rounded-2xl border ${c.is_author == 1 ? 'bg-cyan-900/10 border-cyan-500/30 ml-8' : 'bg-white/5 border-gray-700/50 mr-8'} hover:bg-white/10 transition-colors`}
+                                        className={`group flex gap-3 p-4 rounded-2xl border ${c.is_pinned ? 'bg-yellow-500/10 border-yellow-500' : c.is_author ? 'bg-cyan-900/10 border-cyan-500/30 ml-8' : 'bg-white/5 border-gray-700/50 mr-8'} hover:bg-white/10 transition-colors`}
                                     >
                                         <div className="shrink-0 pt-1">
                                             <Avatar name={c.name} />
                                         </div>
                                         <div>
                                             <div className="flex items-baseline gap-2 mb-1">
-                                                <span className={`font-bold text-sm ${c.is_author == 1 ? 'text-cyan-400' : 'text-white'}`}>
-                                                    {c.name} {c.is_author == 1 && <span className="text-[10px] bg-cyan-500 text-black px-1 rounded ml-1">ADMIN</span>}
+                                                <span className={`font-bold text-sm ${c.is_author ? 'text-cyan-400' : 'text-white'}`}>
+                                                    {c.name}
+                                                    {c.is_author && <span className="text-[10px] bg-cyan-500 text-black px-1 rounded ml-1">ADMIN</span>}
+                                                    {c.is_pinned && <span className="text-[10px] bg-yellow-500 text-black px-1 rounded ml-1">📌 PINNED</span>}
                                                 </span>
                                                 <span className="text-[10px] text-gray-500">{new Date(c.created_at).toLocaleDateString()}</span>
                                             </div>
@@ -161,7 +223,7 @@ export default function Contact() {
                             </div>
 
                             {/* Post Comment */}
-                            <form onSubmit={handleSubmit} className="space-y-3 pt-4 border-t border-gray-700/50">
+                            <form onSubmit={handleCommentSubmit} className="space-y-3 pt-4 border-t border-gray-700/50">
                                 <div className="relative">
                                     <input
                                         value={name}

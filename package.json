@@ -16,6 +16,7 @@
     "@react-three/rapier": "^2.2.0",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.17",
+    "@supabase/supabase-js": "^2.87.3",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/three": "^0.182.0",
     "framer-motion": "^12.23.26",
