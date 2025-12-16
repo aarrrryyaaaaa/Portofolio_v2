@@ -87,7 +87,7 @@ export default function Hero() {
                             {/* Animated Border Button with Robust Implementation */}
                             <div className="relative group rounded-lg inline-block">
                                 <a
-                                    href="src/assets/CV_Arya_Toni_Saputra.pdf"
+                                    href="/CV%20Arya%20Toni%20Saputra.pdf"
                                     download="CV_Arya_Toni_Saputra.pdf"
                                     className="relative z-20 rounded-lg bg-gray-900 text-white font-bold px-8 py-3 overflow-hidden border border-transparent block"
                                 >
@@ -106,7 +106,7 @@ export default function Hero() {
                 <SectionWrapper delay={0.2}>
                     <div className="h-full w-full flex items-center justify-center relative z-10">
                         <TiltImage
-                            src="public/1.png"
+                            src="/1.png"
                             alt="Arya Toni Saputra"
                         />
                     </div>
