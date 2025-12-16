@@ -14,6 +14,13 @@ export default function AdminDashboard() {
 
     const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
 
+    useEffect(() => {
+        document.title = "ADMIN - ARYA TONI SAPUTRA";
+        return () => {
+            document.title = "ARYA TONI SAPUTRA"; // Revert to default
+        };
+    }, []);
+
     const handleLogin = (e) => {
         e.preventDefault();
         if (password === ADMIN_PASSWORD) {

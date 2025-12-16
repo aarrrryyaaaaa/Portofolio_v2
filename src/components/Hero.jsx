@@ -65,7 +65,7 @@ export default function Hero() {
                             ✨ Innovation For the Future
                         </motion.div>
 
-                        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-6 leading-tight">
+                        <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-white mb-6 leading-tight">
                             WELCOME TO <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
                                 MY PORTFOLIO

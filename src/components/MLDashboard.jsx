@@ -135,7 +135,7 @@ export default function MLDashboard() {
 
                     {/* Header */}
                     <div className="mb-6 z-10">
-                        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                        <h2 className="text-xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
                             {algo === 'linear' && <span className="text-cyan-400">📈</span>}
                             {algo === 'forest' && <span className="text-green-400">🌲</span>}
                             {algo === 'clustering' && <span className="text-pink-400">🎯</span>}

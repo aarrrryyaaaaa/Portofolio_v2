@@ -33,7 +33,7 @@ export default function About() {
                 {/* Right: Description */}
                 <SectionWrapper delay={0.2}>
                     <div className="text-left">
-                        <h2 className="text-5xl font-bold text-white mb-8">
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
                             ABOUT <span className="text-cyan-400">ME</span>
                         </h2>
 
