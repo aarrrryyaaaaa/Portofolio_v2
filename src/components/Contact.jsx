@@ -1,0 +1,225 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+
+const SectionWrapper = ({ children, delay = 0 }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.3 }}
+        transition={{ duration: 0.8, delay }}
+    >
+        {children}
+    </motion.div>
+);
+
+const Avatar = ({ name }) => {
+    const initial = name ? name.charAt(0).toUpperCase() : '?';
+    const bgColors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-yellow-500'];
+    const randomColor = bgColors[name.length % bgColors.length];
+
+    return (
+        <div className={`w-10 h-10 rounded-full ${randomColor} flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
+            {initial}
+        </div>
+    );
+};
+
+// SVG Icons for Socials
+const SocialIcon = ({ href, path, colorClass }) => (
+    <motion.a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        whileHover={{ scale: 1.1, y: -5 }}
+        whileTap={{ scale: 0.95 }}
+        className={`bg-gray-900/80 p-4 rounded-2xl border border-white/10 ${colorClass} transition-colors backdrop-blur-md shadow-lg group`}
+    >
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 group-hover:text-white transition-colors">
+            {path}
+        </svg>
+    </motion.a>
+);
+
+export default function Contact() {
+    const [comments, setComments] = useState([]);
+    const [name, setName] = useState('');
+    const [msg, setMsg] = useState('');
+    const [refresh, setRefresh] = useState(0);
+
+    // Common card style to ensure unified look
+    const cardStyle = "bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-cyan-500/10 transition-shadow h-full";
+
+    useEffect(() => {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+        const apiKey = import.meta.env.VITE_API_KEY || '';
+
+        fetch(`${apiUrl}/get_comments.php`, {
+            headers: {
+                'X-API-KEY': apiKey
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setComments(data);
+            })
+            .catch(err => console.error(err));
+    }, [refresh]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!name || !msg) return;
+
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            const apiKey = import.meta.env.VITE_API_KEY || '';
+
+            await fetch(`${apiUrl}/post_comment.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': apiKey
+                },
+                body: JSON.stringify({ name, message: msg })
+            });
+            setMsg('');
+            setName('');
+            setRefresh(prev => prev + 1);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    return (
+        <section id="contact" className="relative w-full min-h-screen py-20 flex flex-col justify-center">
+            <div className="container mx-auto px-6">
+
+                <SectionWrapper>
+                    <div className="text-center mb-16">
+                        <h2 className="text-5xl font-bold text-white">GET IN <span className="text-cyan-400">TOUCH</span></h2>
+                        <p className="text-gray-400 mt-4">Let's collaborate and create something amazing!</p>
+                    </div>
+                </SectionWrapper>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+                    {/* Contact Form */}
+                    <SectionWrapper delay={0.2}>
+                        <div className={cardStyle}>
+                            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                                <span className="mr-2"></span> Hubungi Saya
+                            </h3>
+                            <form className="space-y-4">
+                                <input type="text" placeholder="Nama Anda" className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500" />
+                                <input type="email" placeholder="Email Anda" className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500" />
+                                <textarea rows="4" placeholder="Pesan Anda" className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"></textarea>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg"
+                                >
+                                    Kirim Pesan
+                                </motion.button>
+                            </form>
+                        </div>
+                    </SectionWrapper>
+
+                    {/* Modern Comment Board */}
+                    <SectionWrapper delay={0.4}>
+                        <div className={`${cardStyle} flex flex-col relative overflow-hidden h-[600px]`}>
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+
+                            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                                <span className="mr-2"></span> Community Wall
+                            </h3>
+
+                            {/* Scrollable Comments */}
+                            <div className="flex-1 overflow-y-auto space-y-4 mb-6 pr-2 custom-scrollbar">
+                                {comments.length === 0 && (
+                                    <div className="text-center text-gray-500 py-10">No comments yet. Be the first!</div>
+                                )}
+                                {comments.map((c) => (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        key={c.id}
+                                        className={`group flex gap-3 p-4 rounded-2xl border ${c.is_author == 1 ? 'bg-cyan-900/10 border-cyan-500/30 ml-8' : 'bg-white/5 border-gray-700/50 mr-8'} hover:bg-white/10 transition-colors`}
+                                    >
+                                        <div className="shrink-0 pt-1">
+                                            <Avatar name={c.name} />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-baseline gap-2 mb-1">
+                                                <span className={`font-bold text-sm ${c.is_author == 1 ? 'text-cyan-400' : 'text-white'}`}>
+                                                    {c.name} {c.is_author == 1 && <span className="text-[10px] bg-cyan-500 text-black px-1 rounded ml-1">ADMIN</span>}
+                                                </span>
+                                                <span className="text-[10px] text-gray-500">{new Date(c.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <p className="text-gray-300 text-sm leading-relaxed">{c.message}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {/* Post Comment */}
+                            <form onSubmit={handleSubmit} className="space-y-3 pt-4 border-t border-gray-700/50">
+                                <div className="relative">
+                                    <input
+                                        value={name}
+                                        onChange={e => setName(e.target.value)}
+                                        placeholder="Your Name"
+                                        className="w-full bg-black/40 border border-gray-600 rounded-lg p-3 text-sm text-white focus:border-cyan-500 outline-none"
+                                    />
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        value={msg}
+                                        onChange={e => setMsg(e.target.value)}
+                                        placeholder="Write something..."
+                                        className="flex-1 bg-black/40 border border-gray-600 rounded-lg p-3 text-sm text-white focus:border-cyan-500 outline-none"
+                                    />
+                                    <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 rounded-lg text-sm font-bold shadow-lg transition-all">
+                                        Post
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </SectionWrapper>
+
+                </div>
+
+                {/* Social Links Row */}
+                <SectionWrapper delay={0.6}>
+                    <div className="flex justify-center gap-6 mt-16 flex-wrap">
+                        {/* Github */}
+                        <SocialIcon
+                            href="https://github.com/aarrrryyaaaaa"
+                            colorClass="hover:border-white/50 hover:bg-black/50"
+                            path={<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>}
+                        />
+
+                        {/* LinkedIn */}
+                        <SocialIcon
+                            href="https://www.linkedin.com/in/arya-toni-saputra-741878391/"
+                            colorClass="hover:border-blue-500/50 hover:bg-blue-900/20 hover:text-blue-400"
+                            path={<><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></>}
+                        />
+
+                        {/* Instagram */}
+                        <SocialIcon
+                            href="https://instagram.com/aryats"
+                            colorClass="hover:border-pink-500/50 hover:bg-pink-900/20 hover:text-pink-400"
+                            path={<><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></>}
+                        />
+
+                        {/* TikTok */}
+                        <SocialIcon
+                            href="https://www.tiktok.com/@aarrrryyaaaaa?is_from_webapp=1&sender_device=pc"
+                            colorClass="hover:border-teal-400/50 hover:bg-teal-900/20 hover:text-teal-400"
+                            path={<path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>}
+                        />
+                    </div>
+                </SectionWrapper>
+            </div>
+        </section>
+    );
+}
