@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MLDashboard from './MLDashboard';
 
 const SectionWrapper = ({ children, delay = 0 }) => (
     <motion.div
@@ -17,38 +18,44 @@ export default function Projects() {
     const [selectedProject, setSelectedProject] = useState(null);
 
     const projects = [
-        { id: 1, title: "Portfolio V2", desc: "3D Interactive", img: "https://images.unsplash.com/photo-1550439062-609e1531270e?w=500", details: "Built with React, Three.js, and Framer Motion for a fully immersive web experience." },
-        { id: 2, title: "E-Shop API", desc: "Backend System", img: "https://images.unsplash.com/photo-1557821552-17105176677c?w=500", details: "Scalable REST API with Node.js and PostgreSQL." },
-        { id: 3, title: "Design Sys", desc: "UI Components", img: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=500", details: "A comprehensive library of reusable UI components." }
+        { id: 1, title: "Portfolio V2", desc: "3D Interactive Showcase", img: "https://images.unsplash.com/photo-1550439062-609e1531270e?w=500", details: "Built with React, Three.js, and Framer Motion for a fully immersive web experience." },
+        {
+            id: 'interactive_ml', // Custom ID for special rendering
+            title: "Machine Learning",
+            desc: "Supervised & Unsupervised Models",
+            img: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=500",
+            details: "Interactive demonstration of Machine Learning algorithms including Linear Regression and K-Means clustering. Features real-time visualization of synthetic datasets."
+        },
+        { id: 3, title: "Design Sys", desc: "UI Components Library", img: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=500", details: "A comprehensive library of reusable UI components." }
     ];
 
     const certificates = [
-        { title: "AWS Solutions", desc: "2024", img: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500" },
-        { title: "Google Cloud", desc: "2023", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500" },
-        { title: "Meta Front-End", desc: "2023", img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500" }
+        { title: "AWS Solutions", desc: "2028", img: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500" },
+        { title: "Google Cloud", desc: "2028", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500" },
+        { title: "Meta Front-End", desc: "2028", img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500" }
     ];
 
     const skills = [
-        { name: "React", icon: "⚛️" },
-        { name: "Next.js", icon: "N" },
-        { name: "TypeScript", icon: "TS" },
-        { name: "Node.js", icon: "🟩" },
-        { name: "Tailwind", icon: "🌊" },
-        { name: "Three.js", icon: "🧊" },
-        { name: "Figma", icon: "🎨" },
-        { name: "Git", icon: "🐙" }
+        { name: "React", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" },
+        { name: "Next.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" }, // Usually white, might need bg
+        { name: "TypeScript", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" },
+        { name: "Node.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" },
+        { name: "Tailwind", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" },
+        { name: "Figma", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg" },
+        { name: "Git", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" }
     ];
 
     return (
         <section id="projects" className="relative w-full min-h-screen py-20">
             <div className="container mx-auto px-6">
-
+                {/* ... existing header code inside SectionWrapper ... */}
                 <SectionWrapper>
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-bold text-white mb-2">Showcase</h2>
                         <p className="text-gray-500">My recent work, achievements, and technical skills.</p>
                     </div>
                 </SectionWrapper>
+                {/* ... wrapper ... */}
 
                 {/* Gliding Toggle Switch - Zain Style */}
                 <SectionWrapper delay={0.1}>
@@ -77,6 +84,7 @@ export default function Projects() {
                 {/* Content Grid */}
                 <div className="min-h-[400px]">
                     <AnimatePresence mode='wait'>
+                        {/* ... projects tab ... */}
                         {activeTab === 'projects' && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
@@ -100,6 +108,7 @@ export default function Projects() {
                             </motion.div>
                         )}
 
+                        {/* ... certificates tab ... */}
                         {activeTab === 'certificates' && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 {certificates.map((c, i) => (
@@ -119,15 +128,15 @@ export default function Projects() {
                         )}
 
                         {activeTab === 'skills' && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-wrap justify-center gap-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-wrap justify-center gap-6">
                                 {skills.map((s, i) => (
                                     <motion.div
                                         key={i}
                                         whileHover={{ scale: 1.1, y: -5, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)' }}
-                                        className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center gap-2 backdrop-blur-sm cursor-default shadow-sm transition-colors"
+                                        className="p-6 bg-gray-900/50 rounded-2xl border border-white/10 flex flex-col items-center gap-4 backdrop-blur-sm cursor-default shadow-lg hover:shadow-cyan-500/20 transition-all w-32 h-32 justify-center"
                                     >
-                                        <span className="text-2xl filter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{s.icon}</span>
-                                        <span className="font-semibold text-gray-200">{s.name}</span>
+                                        <img src={s.icon} alt={s.name} className="w-12 h-12 object-contain" />
+                                        <span className="font-semibold text-gray-300 text-sm">{s.name}</span>
                                     </motion.div>
                                 ))}
                             </motion.div>
@@ -141,35 +150,45 @@ export default function Projects() {
                     {selectedProject && (
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+                            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 md:p-8"
                             onClick={() => setSelectedProject(null)}
                         >
                             <motion.div
                                 initial={{ scale: 0.9, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 50 }}
-                                className="bg-gray-900 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 shadow-2xl relative"
+                                className={`bg-[#0a0a0a] w-full ${selectedProject.id === 'interactive_ml' ? 'max-w-7xl h-[90vh]' : 'max-w-4xl max-h-[90vh]'} overflow-hidden rounded-3xl border border-white/10 shadow-2xl relative flex flex-col`}
                                 onClick={e => e.stopPropagation()}
                             >
                                 {/* Close Button */}
-                                <button onClick={() => setSelectedProject(null)} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 rounded-full text-white flex items-center justify-center hover:bg-red-500 transition-colors">✕</button>
+                                <button onClick={() => setSelectedProject(null)} className="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 rounded-full text-white flex items-center justify-center hover:bg-red-500 transition-colors border border-white/10">✕</button>
 
-                                {/* Image Header */}
-                                <div className="h-64 w-full relative">
-                                    <img src={selectedProject.img} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
-                                    <div className="absolute bottom-6 left-8">
-                                        <h2 className="text-4xl font-bold text-white mb-2">{selectedProject.title}</h2>
-                                        <p className="text-cyan-400 text-lg">{selectedProject.desc}</p>
+                                {/* CONDITIONAL RENDERING FOR ML DASHBOARD */}
+                                {selectedProject.id === 'interactive_ml' ? (
+                                    <div className="w-full h-full p-6 pt-16 overflow-y-auto">
+                                        <MLDashboard />
                                     </div>
-                                </div>
+                                ) : (
+                                    // STANDARD PROJECT VIEW
+                                    <div className="overflow-y-auto h-full">
+                                        {/* Image Header */}
+                                        <div className="h-64 w-full relative">
+                                            <img src={selectedProject.img} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                                            <div className="absolute bottom-6 left-8">
+                                                <h2 className="text-4xl font-bold text-white mb-2">{selectedProject.title}</h2>
+                                                <p className="text-cyan-400 text-lg">{selectedProject.desc}</p>
+                                            </div>
+                                        </div>
 
-                                {/* Content */}
-                                <div className="p-8">
-                                    <p className="text-gray-300 leading-relaxed text-lg mb-8">{selectedProject.details}</p>
-                                    <div className="flex gap-4">
-                                        <button className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition-colors">Visit Site</button>
-                                        <button className="px-6 py-3 border border-white/20 hover:bg-white/10 text-white rounded-xl font-bold transition-colors">View Code</button>
+                                        {/* Content */}
+                                        <div className="p-8">
+                                            <p className="text-gray-300 leading-relaxed text-lg mb-8">{selectedProject.details}</p>
+                                            <div className="flex gap-4">
+                                                <button className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition-colors">Visit Site</button>
+                                                <button className="px-6 py-3 border border-white/20 hover:bg-white/10 text-white rounded-xl font-bold transition-colors">View Code</button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </motion.div>
                         </motion.div>
                     )}

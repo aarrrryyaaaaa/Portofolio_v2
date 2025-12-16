@@ -42,20 +42,19 @@ export default function TiltImage({ src, alt }) {
             }}
             // Gradient Update: Subtle Cyan to dark Slate to transparently blend 
             // Made it less "neon" to fit photo better as requested.
-            className="relative h-96 w-72 rounded-xl bg-gradient-to-tr from-cyan-900 via-slate-800 to-gray-900 p-1 shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+            className="relative w-[300px] h-[400px] md:w-[350px] md:h-[500px] rounded-2xl bg-gradient-to-tr from-cyan-900 via-slate-800 to-gray-900 p-1 shadow-[0_0_20px_rgba(34,211,238,0.3)]"
         >
             <div
                 style={{
                     transform: "translateZ(75px)",
                     transformStyle: "preserve-3d",
                 }}
-                className="absolute inset-4 grid place-content-center rounded-xl bg-[#0a0a0a] shadow-2xl overflow-hidden border border-white/5"
+                className="absolute inset-0 rounded-xl shadow-2xl overflow-hidden border border-white/5"
             >
                 <img
                     src={src}
                     alt={alt}
-                    // Photo Scale Update: object-contain to prevent cropping
-                    className="w-full h-full object-contain opacity-100 transition-opacity drop-shadow-2xl"
+                    className="w-full h-full object-cover object-top opacity-100 transition-opacity drop-shadow-2xl"
                 />
             </div>
         </motion.div>
