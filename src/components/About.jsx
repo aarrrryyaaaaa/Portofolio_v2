@@ -24,8 +24,8 @@ export default function About() {
                 <SectionWrapper>
                     <div className="h-[500px] w-full flex items-center justify-center relative">
                         <TiltImage
-                            src="public/2.png"
-                            alt="Coding Setup"
+                            src="/2.png"
+                            alt="Arya"
                         />
                         <div className="absolute bottom-10 left-0 w-full text-center text-gray-500 text-sm pointer-events-none">
                             Hover for 3D Effect
