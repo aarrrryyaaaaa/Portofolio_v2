@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../lib/LanguageContext';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
+import Blog from './Blog';
 
 const SectionWrapper = ({ children, delay = 0 }) => (
     <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.3 }}
+        viewport={{ once: false, amount: 0.2 }}
         transition={{ duration: 0.8, delay }}
+        className="h-full"
     >
         {children}
     </motion.div>
@@ -42,6 +45,7 @@ const SocialIcon = ({ href, path, colorClass }) => (
 );
 
 export default function Contact() {
+    const { t } = useLanguage();
     const [comments, setComments] = useState([]);
 
     // Comment Form State
@@ -91,8 +95,8 @@ export default function Contact() {
         if (!name || !msg) return;
 
         try {
-            // Simple admin check
-            const is_author = (name.toLowerCase() === 'arya toni saputra');
+            // Public comments are NEVER admin
+            const is_author = false;
 
             const { error } = await supabase
                 .from('comments')
@@ -111,7 +115,7 @@ export default function Contact() {
     const handleContactSubmit = async (e) => {
         e.preventDefault();
         if (!contactName || !contactEmail || !contactMsg) return;
-        setContactStatus('Sending...');
+        setContactStatus(t.contact_btn_sending);
 
         try {
             const { error } = await supabase
@@ -120,14 +124,16 @@ export default function Contact() {
 
             if (error) throw error;
 
-            setContactStatus('Message Sent! 🚀');
+            if (error) throw error;
+
+            setContactStatus(t.contact_btn_sent);
             setContactName('');
             setContactEmail('');
             setContactMsg('');
             setTimeout(() => setContactStatus(''), 3000);
         } catch (err) {
             console.error('Error sending message:', err.message);
-            setContactStatus('Failed to send.');
+            setContactStatus(t.contact_btn_failed);
         }
     };
 
@@ -137,65 +143,80 @@ export default function Contact() {
 
                 <SectionWrapper>
                     <div className="text-center mb-16">
-                        <h2 className="text-5xl font-bold text-white">GET IN <span className="text-cyan-400">TOUCH</span></h2>
-                        <p className="text-gray-400 mt-4">Let's collaborate and create something amazing!</p>
+                        <h2 className="text-5xl font-bold text-white">{t.contact_title} <span className="text-cyan-400">{t.contact_title_highlight}</span></h2>
+                        <p className="text-gray-400 mt-4">{t.contact_subtitle}</p>
                     </div>
                 </SectionWrapper>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
-                    {/* Contact Form */}
-                    <SectionWrapper delay={0.2}>
-                        <div className={cardStyle}>
-                            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-                                <span className="mr-2"></span> Hubungi Saya
-                            </h3>
-                            <form onSubmit={handleContactSubmit} className="space-y-4">
-                                <input
-                                    type="text"
-                                    placeholder="Nama Anda"
-                                    value={contactName}
-                                    onChange={e => setContactName(e.target.value)}
-                                    className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
-                                />
-                                <input
-                                    type="email"
-                                    placeholder="Email Anda"
-                                    value={contactEmail}
-                                    onChange={e => setContactEmail(e.target.value)}
-                                    className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
-                                />
-                                <textarea
-                                    rows="4"
-                                    placeholder="Pesan Anda"
-                                    value={contactMsg}
-                                    onChange={e => setContactMsg(e.target.value)}
-                                    className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
-                                ></textarea>
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg"
-                                >
-                                    {contactStatus || 'Kirim Pesan'}
-                                </motion.button>
-                            </form>
-                        </div>
-                    </SectionWrapper>
+                    {/* LEFT COLUMN: Contact Form + Blog */}
+                    <div className="flex flex-col gap-10">
+                        {/* Contact Form */}
+                        <SectionWrapper delay={0.2}>
+                            <div className={cardStyle}>
+                                <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                                    <span className="mr-2"></span> {t.contact_title} {t.contact_title_highlight}
+                                </h3>
+                                <form onSubmit={handleContactSubmit} className="space-y-4">
+                                    <input
+                                        type="text"
+                                        placeholder={t.contact_form_name}
+                                        value={contactName}
+                                        onChange={e => setContactName(e.target.value)}
+                                        className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                    />
+                                    <input
+                                        type="email"
+                                        placeholder={t.contact_form_email}
+                                        value={contactEmail}
+                                        onChange={e => setContactEmail(e.target.value)}
+                                        className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                    />
+                                    <textarea
+                                        rows="4"
+                                        placeholder={t.contact_form_msg}
+                                        value={contactMsg}
+                                        onChange={e => setContactMsg(e.target.value)}
+                                        className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                    ></textarea>
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg"
+                                    >
+                                        {contactStatus || t.contact_btn_send}
+                                    </motion.button>
+                                </form>
+                            </div>
+                        </SectionWrapper>
 
-                    {/* Modern Comment Board */}
+                        {/* Blog Card (Embed) */}
+                        <SectionWrapper delay={0.3}>
+                            <div className="bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-purple-500/10 transition-shadow">
+                                <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                                    <span className="mr-2">📝</span> {t.blog_title}
+                                </h3>
+                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                    <Blog isEmbedded={true} />
+                                </div>
+                            </div>
+                        </SectionWrapper>
+                    </div>
+
+                    {/* RIGHT COLUMN: Comment Board (Tall) */}
                     <SectionWrapper delay={0.4}>
-                        <div className="bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-cyan-500/10 transition-shadow flex flex-col relative overflow-hidden h-[600px]">
+                        <div className="bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-cyan-500/10 transition-shadow flex flex-col relative overflow-hidden h-full min-h-[500px]">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
 
                             <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-                                <span className="mr-2"></span> Community Wall
+                                <span className="mr-2"></span> {t.contact_wall_title}
                             </h3>
 
                             {/* Scrollable Comments */}
                             <div className="flex-1 overflow-y-auto space-y-4 mb-6 pr-2 custom-scrollbar scroll-smooth">
                                 {comments.length === 0 && (
-                                    <div className="text-center text-gray-500 py-10">No comments yet. Be the first!</div>
+                                    <div className="text-center text-gray-500 py-10">{t.contact_no_comments}</div>
                                 )}
                                 {comments.map((c) => (
                                     <motion.div
@@ -213,10 +234,19 @@ export default function Contact() {
                                                     {c.name}
                                                     {c.is_author && <span className="text-[10px] bg-cyan-500 text-black px-1 rounded ml-1">ADMIN</span>}
                                                     {c.is_pinned && <span className="text-[10px] bg-yellow-500 text-black px-1 rounded ml-1">📌 PINNED</span>}
+                                                    {c.is_liked_by_admin && <span className="text-[10px] bg-pink-500 text-white px-1 rounded ml-1">❤️ LIKED</span>}
                                                 </span>
                                                 <span className="text-[10px] text-gray-500">{new Date(c.created_at).toLocaleDateString()}</span>
                                             </div>
                                             <p className="text-gray-300 text-sm leading-relaxed">{c.message}</p>
+
+                                            {/* Admin Reply */}
+                                            {c.admin_reply && (
+                                                <div className="mt-2 p-3 bg-cyan-900/20 border-l-2 border-cyan-500 rounded-r text-sm">
+                                                    <div className="text-cyan-400 font-bold text-xs mb-1">Admin Reply:</div>
+                                                    <p className="text-gray-300">{c.admin_reply}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))}
@@ -228,7 +258,7 @@ export default function Contact() {
                                     <input
                                         value={name}
                                         onChange={e => setName(e.target.value)}
-                                        placeholder="Your Name"
+                                        placeholder={t.contact_form_name}
                                         className="w-full bg-black/40 border border-gray-600 rounded-lg p-3 text-sm text-white focus:border-cyan-500 outline-none"
                                     />
                                 </div>
@@ -236,11 +266,11 @@ export default function Contact() {
                                     <input
                                         value={msg}
                                         onChange={e => setMsg(e.target.value)}
-                                        placeholder="Write something..."
+                                        placeholder={t.contact_post_placeholder}
                                         className="flex-1 bg-black/40 border border-gray-600 rounded-lg p-3 text-sm text-white focus:border-cyan-500 outline-none"
                                     />
                                     <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 rounded-lg text-sm font-bold shadow-lg transition-all">
-                                        Post
+                                        {t.contact_btn_post}
                                     </button>
                                 </div>
                             </form>

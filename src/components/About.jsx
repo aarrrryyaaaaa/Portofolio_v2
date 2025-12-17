@@ -1,4 +1,6 @@
+import { useLanguage } from '../lib/LanguageContext';
 import TiltImage from './TiltImage';
+import BorderBeam from './BorderBeam';
 import { motion } from 'framer-motion';
 
 const SectionWrapper = ({ children, delay = 0 }) => (
@@ -14,6 +16,8 @@ const SectionWrapper = ({ children, delay = 0 }) => (
 );
 
 export default function About() {
+    const { t } = useLanguage();
+
     return (
         <section id="about" className="relative w-full min-h-screen flex items-center py-20">
             {/* Removing bg-[#020617] to let global grid show through. Using Backdrop blur if needed or just transparency */}
@@ -33,13 +37,29 @@ export default function About() {
                 {/* Right: Description */}
                 <SectionWrapper delay={0.2}>
                     <div className="text-left">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
-                            ABOUT <span className="text-cyan-400">ME</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 flex flex-col gap-2">
+                            <span>{t.about_title}</span>
+                            <span className="text-cyan-400">ARYA TONI SAPUTRA</span>
                         </h2>
 
                         <p className="text-gray-400 text-lg leading-relaxed mb-6">
-                            I am a student of Informatics at Institut Teknologi Sains Bandung with a huge interest in Front-End Development, Modern Web Technologies and there are many more of my interests...
+                            {t.about_desc}
                         </p>
+
+                        {/* Download CV Button Moved Here */}
+                        <div className="mb-8 relative group rounded-lg inline-block">
+                            <a
+                                href="/CV%20Arya%20Toni%20Saputra.pdf"
+                                download="CV_Arya_Toni_Saputra.pdf"
+                                className="relative z-20 rounded-lg bg-gray-900 text-white font-bold px-8 py-4 text-lg overflow-hidden border border-transparent block shadow-lg hover:shadow-cyan-500/50 transition-shadow"
+                            >
+                                Download CV
+                            </a>
+                            {/* Border Beam Wrapper */}
+                            <div className="absolute -inset-[2px] rounded-xl z-10">
+                                <BorderBeam />
+                            </div>
+                        </div>
 
                         {/* Animated Quote */}
                         <motion.blockquote
@@ -48,7 +68,7 @@ export default function About() {
                             className="border-l-4 border-cyan-500 pl-4 py-2 italic text-gray-300 mb-8 bg-cyan-900/10 rounded-r shadow-sm"
                         >
                             <span className="text-cyan-400 font-bold text-lg">"</span>
-                            Whoever strives shall succeed.
+                            {t.about_quote}
                             <span className="text-cyan-400 font-bold text-lg">"</span>
                             <motion.div
                                 initial={{ width: 0 }}
@@ -61,9 +81,9 @@ export default function About() {
                         {/* Stats */}
                         <div className="grid grid-cols-3 gap-4 mb-10">
                             {[
-                                { num: "3", lbl: "TOTAL PROJECTS" },
-                                { num: "3", lbl: "CERTIFICATES" },
-                                { num: "0", lbl: "YEARS EXP" }
+                                { num: "3", lbl: t.about_stats_projects },
+                                { num: "3", lbl: t.about_stats_certs },
+                                { num: "0", lbl: t.about_stats_exp }
                             ].map((stat, i) => (
                                 <motion.div
                                     key={i}
@@ -78,7 +98,9 @@ export default function About() {
 
                         {/* Tech Stack Icons */}
                         <div>
-                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 border-b border-gray-800 pb-2 inline-block">Core Technologies</h3>
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6 border-b border-gray-800 pb-2 inline-block">
+                                {t.about_core_tech}
+                            </h3>
                             <div className="flex flex-wrap gap-4 items-center">
                                 {[
                                     { name: 'React', url: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg' },

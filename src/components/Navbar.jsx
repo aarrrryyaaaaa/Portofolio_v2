@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../lib/LanguageContext';
 import BorderBeam from './BorderBeam';
 
 export default function Navbar() {
+    const { t, language, toggleLanguage } = useLanguage();
     const [activeSection, setActiveSection] = useState('home');
 
     const scrollToSection = (id) => {
@@ -55,23 +57,40 @@ export default function Navbar() {
 
                 {/* Links */}
                 <div className="relative z-10 flex items-center gap-1 pl-2">
-                    {['Home', 'About', 'Projects', 'Contact'].map((item) => {
-                        const id = item.toLowerCase();
-                        const isActive = activeSection === id;
+                    {[
+                        { id: 'home', label: t.nav_home },
+                        { id: 'about', label: t.nav_about },
+                        { id: 'projects', label: t.nav_projects },
+                        { id: 'contact', label: t.nav_contact }
+                    ].map((item) => {
+                        const isActive = activeSection === item.id;
 
                         return (
                             <button
-                                key={item}
-                                onClick={() => scrollToSection(id)}
+                                key={item.id}
+                                onClick={() => scrollToSection(item.id)}
                                 className={`px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-medium rounded-full transition-all duration-300 ${isActive
                                     ? 'bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)] font-bold'
                                     : 'text-gray-400 hover:text-white hover:bg-white/10'
                                     }`}
                             >
-                                {item}
+                                {item.label}
                             </button>
                         );
                     })}
+
+
+                    {/* Language Toggle */}
+                    <div className="pl-2 border-l border-white/10 ml-2">
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-[10px] font-bold"
+                        >
+                            <span className={language === 'id' ? 'text-cyan-400' : 'text-gray-500'}>ID</span>
+                            <span className="text-gray-600">/</span>
+                            <span className={language === 'en' ? 'text-cyan-400' : 'text-gray-500'}>EN</span>
+                        </button>
+                    </div>
                 </div>
             </nav>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../lib/LanguageContext';
 import VelocityText from './VelocityText';
 import LogoWall from './LogoWall';
 import TiltImage from './TiltImage';
@@ -18,12 +19,15 @@ const SectionWrapper = ({ children, delay = 0 }) => (
 );
 
 export default function Hero() {
+    const { t } = useLanguage();
     const [text, setText] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [loopNum, setLoopNum] = useState(0);
     const [delta, setDelta] = useState(100);
 
-    const toRotate = ["Front End Developer", "UI/UX Enthusiast", "Creative Coder"];
+
+
+    const toRotate = [t.hero_role_1, t.hero_role_2, t.hero_role_3];
     const period = 2000;
 
     useEffect(() => {
@@ -48,7 +52,7 @@ export default function Hero() {
         <section id="home" className="relative w-full min-h-screen flex flex-col pt-32 pb-10 overflow-hidden">
 
             {/* Scroll Velocity Text - Re-positioned and fully visible */}
-            <div className="absolute top-32 left-0 w-full z-0 opacity-100 mix-blend-normal">
+            <div className="absolute top-15 left-0 w-full z-0 opacity-180 mix-blend-normal">
                 <VelocityText />
             </div>
 
@@ -66,9 +70,9 @@ export default function Hero() {
                         </motion.div>
 
                         <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-white mb-6 leading-tight">
-                            WELCOME TO <br />
+                            {t.hero_greeting} <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
-                                MY PORTFOLIO
+                                ARYA TONI SAPUTRA
                             </span>
                         </h1>
 
@@ -80,24 +84,11 @@ export default function Hero() {
                         </div>
 
                         <p className="max-w-lg text-gray-500 mb-10 leading-relaxed text-base">
-                            I craft responsive and visually engaging websites using React, Tailwind CSS, and modern web technologies.
+                            {t.hero_desc}
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-6">
-                            {/* Animated Border Button with Robust Implementation */}
-                            <div className="relative group rounded-lg inline-block">
-                                <a
-                                    href="/CV%20Arya%20Toni%20Saputra.pdf"
-                                    download="CV_Arya_Toni_Saputra.pdf"
-                                    className="relative z-20 rounded-lg bg-gray-900 text-white font-bold px-8 py-4 text-lg overflow-hidden border border-transparent block shadow-lg hover:shadow-cyan-500/50 transition-shadow"
-                                >
-                                    Download CV
-                                </a>
-                                {/* Border Beam Wrapper */}
-                                <div className="absolute -inset-[2px] rounded-xl z-10">
-                                    <BorderBeam />
-                                </div>
-                            </div>
+                            {/* Border Beam Button Removed */}
 
                             {/* Social Icons (SVGs) */}
                             <div className="flex gap-4 items-center">

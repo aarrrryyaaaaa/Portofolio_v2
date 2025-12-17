@@ -9,6 +9,8 @@ import Contact from './components/Contact';
 import Squares from './components/Squares';
 import Preloader from './components/Preloader';
 import VisitorTracker from './components/VisitorTracker';
+import Blog from './components/Blog';
+import { LanguageProvider } from './lib/LanguageContext';
 
 // Lazy Load Admin to keep bundle small
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -54,13 +56,15 @@ export default function App() {
     );
 
     return (
-        <Suspense fallback={<div className="bg-black min-h-screen"></div>}>
-            <Switch>
-                <Route path="/" component={PortfolioContent} />
-                <Route path="/admin-panel-secret" component={AdminDashboard} />
-                {/* Fallback for unknown routes */}
-                <Route component={PortfolioContent} />
-            </Switch>
-        </Suspense>
+        <LanguageProvider>
+            <Suspense fallback={<div className="bg-black min-h-screen"></div>}>
+                <Switch>
+                    <Route path="/" component={PortfolioContent} />
+                    <Route path="/admin-panel-secret" component={AdminDashboard} />
+                    {/* Fallback for unknown routes */}
+                    <Route component={PortfolioContent} />
+                </Switch>
+            </Suspense>
+        </LanguageProvider>
     );
 }

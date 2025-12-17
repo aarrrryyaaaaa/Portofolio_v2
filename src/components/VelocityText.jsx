@@ -56,12 +56,12 @@ export default function VelocityText() {
         // Removed opacity/mix-blend-overlay to ensure visibility as requested
         <section className="py-8 relative z-10 w-full overflow-hidden pointer-events-none select-none">
             <ParallaxText baseVelocity={-2}>
-                <span className="text-gray-800 mr-12 block">ABOUT ME</span>
-                <span className="text-cyan-900/50 mr-12 block">ABOUT ME</span>
+                <span className="text-gray-800 mr-12 block">ARYA TONI SAPUTRA</span>
+                <span className="text-cyan-900/50 mr-12 block">ARYA TONI SAPUTRA</span>
             </ParallaxText>
             <ParallaxText baseVelocity={2}>
-                <span className="text-cyan-900/50 mr-12 block">ABOUT ME</span>
-                <span className="text-gray-800 mr-12 block">ABOUT ME</span>
+                <span className="text-cyan-900/50 mr-12 block">ARYA TONI SAPUTRA</span>
+                <span className="text-gray-800 mr-12 block">ARYA TONI SAPUTRA</span>
             </ParallaxText>
         </section>
     );
