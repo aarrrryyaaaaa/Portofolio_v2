@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { useLanguage } from '../lib/LanguageContext';
 import MLDashboard from './MLDashboard';
+import EcommerceSystem from './EcommerceSystem';
 
 const SectionWrapper = ({ children, delay = 0 }) => (
     <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: false, amount: 0.2 }}
-        transition={{ duration: 0.6, delay }}
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut", delay }}
     >
         {children}
     </motion.div>
@@ -18,17 +19,23 @@ const SectionWrapper = ({ children, delay = 0 }) => (
 export default function Projects() {
     const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState('projects');
-    const [selectedProject, setSelectedProject] = useState(null);
+    const [iframeLoading, setIframeLoading] = useState(true);
 
     // Data States
     const [projects, setProjects] = useState([]);
     const [skills, setSkills] = useState([]);
+    const [selectedProject, setSelectedProject] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    useEffect(() => {
+        if (selectedProject) setIframeLoading(true);
+    }, [selectedProject]);
+
+
     const certificates = [
-        { title: "AWS Solutions", desc: "2028", img: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500" },
-        { title: "Google Cloud", desc: "2028", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500" },
-        { title: "Meta Front-End", desc: "2028", img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500" }
+        { title: "AWS Solutions (Coming Soon)", desc: "2028", img: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500" },
+        { title: "Google Cloud (Coming Soon)", desc: "2028", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500" },
+        { title: "Meta Front-End (Coming Soon)", desc: "2028", img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500" }
     ];
 
     useEffect(() => {
@@ -44,13 +51,16 @@ export default function Projects() {
             let finalProjects = p || [];
             let finalSkills = s || [];
 
+            // SAFEGUARD: Ensure projects is an array
+            if (!Array.isArray(finalProjects)) finalProjects = [];
+
             // Check if critical ML project is missing
-            if (!finalProjects.find(pro => pro.id === 'interactive_ml')) {
+            if (!finalProjects.find(pro => pro && pro.id === 'interactive_ml')) {
                 const mlProject = {
                     id: 'interactive_ml',
-                    title: 'Interactive ML Dashboard',
+                    title: 'Machine Learning Dashboard',
                     description: 'Real-time Neural Network Visualization',
-                    image_url: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800&q=80',
+                    image_url: 'https://plus.unsplash.com/premium_photo-1683121710572-7723bd2e235d?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                     details: 'An interactive dashboard allowing users to visualize and manipulate neural network parameters in real-time. Built with React, Three.js, and TensorFlow.js.',
                     link_url: '#',
                     code_url: '#'
@@ -58,41 +68,25 @@ export default function Projects() {
                 finalProjects = [mlProject, ...finalProjects];
             }
 
-            // Check if Legacy Portfolio is missing
-            if (finalProjects.length < 3) {
-                finalProjects.push(
-                    {
-                        id: 'ecommerce_v2',
-                        title: 'E-Commerce Platform',
-                        description: 'Full-stack Shopping Experience',
-                        image_url: 'https://images.unsplash.com/photo-1557821552-17105176677c?w=800&q=80',
-                        details: 'A complete e-commerce solution with cart, checkout, and admin panel.',
-                        link_url: '#',
-                        code_url: '#'
-                    },
-                    {
-                        id: 'portfolio_v1',
-                        title: 'Legacy Portfolio',
-                        description: 'Previous version of this site',
-                        image_url: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80',
-                        details: 'The first iteration of my personal portfolio.',
-                        link_url: '#',
-                        code_url: '#'
-                    }
-                );
-            }
+            // CLEANED UP: No more forced injection of "Ecommerce" or "Legacy Portfolio".
+            // Trust the DB.
+
+            // Re-sort by created_at desc (or whatever logic preferred)
+            finalProjects.sort((a, b) => {
+                if (!a || !b) return 0;
+                return (a.id === 'interactive_ml' ? -1 : 1);
+            });
 
             // Check if skills are empty or too few (Overwrite fallback with FULL LIST)
+            // Ensure skills is array
+            if (!Array.isArray(finalSkills)) finalSkills = [];
+
             if (finalSkills.length < 5) {
-                // We define categories here for fallback. 
-                // In a real DB, these should be columns. For now we hardcode the structure.
+                // ... (Fallback skills logic) ...
                 finalSkills = [
                     // Frontend
                     { id: 101, name: "React", category: "fe", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" },
-                    { id: 102, name: "Vue.js", category: "fe", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" },
                     { id: 103, name: "Tailwind", category: "fe", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" },
-                    { id: 104, name: "Bootstrap", category: "fe", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bootstrap/bootstrap-original.svg" },
-                    { id: 105, name: "Sass", category: "fe", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sass/sass-original.svg" },
 
                     // Backend
                     { id: 201, name: "Node.js", category: "be", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" },
@@ -101,9 +95,7 @@ export default function Projects() {
                     { id: 204, name: "PHP", category: "be", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" },
 
                     // Database
-                    { id: 301, name: "PostgreSQL", category: "db", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" },
                     { id: 302, name: "MySQL", category: "db", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" },
-                    { id: 303, name: "MongoDB", category: "db", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" },
                     { id: 304, name: "Supabase", category: "db", icon_url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/supabase/supabase-original.svg" },
 
                     // Tools
@@ -119,13 +111,19 @@ export default function Projects() {
 
         } catch (error) {
             console.error("Error fetching projects/skills:", error);
+            // Don't crash entirely, set empty arrays
+            setProjects([]);
+            setSkills([]);
         } finally {
             setLoading(false);
         }
     };
 
     // Helper to filter skills by category
-    const getSkillsByCategory = (cat) => skills.filter(s => s.category === cat || (!s.category && cat === 'fe')); // Default to FE if no category
+    const getSkillsByCategory = (cat) => {
+        if (!Array.isArray(skills)) return [];
+        return skills.filter(s => s && (s.category === cat || (!s.category && cat === 'fe')));
+    };
 
     const renderSkillGroup = (categoryKey, title) => {
         const groupSkills = getSkillsByCategory(categoryKey);
@@ -136,18 +134,46 @@ export default function Projects() {
                 <h3 className="text-xl font-bold text-cyan-400 mb-6 border-l-4 border-cyan-500 pl-4">{title}</h3>
                 <div className="flex flex-wrap gap-6">
                     {groupSkills.map((s) => (
-                        <motion.div
-                            key={s.id}
-                            whileHover={{ scale: 1.1, y: -5, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)' }}
-                            className="p-4 bg-gray-900/50 rounded-2xl border border-white/10 flex flex-col items-center gap-3 backdrop-blur-sm cursor-default shadow-lg hover:shadow-cyan-500/20 transition-all w-28 h-28 justify-center"
-                        >
-                            <img src={s.icon_url} alt={s.name} className="w-10 h-10 object-contain" />
-                            <span className="font-semibold text-gray-300 text-xs text-center">{s.name}</span>
-                        </motion.div>
+                        s ? (
+                            <motion.div
+                                key={s.id || Math.random()}
+                                whileHover={{ scale: 1.1, y: -5, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)' }}
+                                className="p-4 bg-gray-900/50 rounded-2xl border border-white/10 flex flex-col items-center gap-3 backdrop-blur-sm cursor-default shadow-lg hover:shadow-cyan-500/20 transition-all w-28 h-28 justify-center"
+                            >
+                                <img src={s.icon_url} alt={s.name || 'Skill'} className="w-10 h-10 object-contain" />
+                                <span className="font-semibold text-gray-300 text-xs text-center">{s.name}</span>
+                            </motion.div>
+                        ) : null
                     ))}
                 </div>
             </div>
         );
+    };
+
+    // Feature Detection Helpers - ROBUST CRASH PROOF
+    const isInteractiveML = (p) => {
+        if (!p) return false;
+        try {
+            const t = p.title ? p.title.toLowerCase() : '';
+            return p.id === 'interactive_ml' || t.includes('interactive ml') || t.includes('machine learning');
+        } catch (e) { return false; }
+    };
+
+    const isEcommerce = (p) => {
+        if (!p) return false;
+        try {
+            const t = p.title ? p.title.toLowerCase() : '';
+            return p.id === 'ecommerce_v2' || t.includes('e-commerce') || t.includes('ecommerce') || t.includes('toko') || t.includes('shop') || t.includes('market');
+        } catch (e) { return false; }
+    };
+
+    const isLegacy = (p) => {
+        if (!p) return false;
+        try {
+            const t = p.title ? p.title.toLowerCase() : '';
+            const d = p.description ? p.description.toLowerCase() : '';
+            return p.id === 'portfolio_v1' || t.includes('legacy') || t.includes('portfolio v1') || t.includes('old') || d.includes('previous') || t.includes('sebelumnya') || t.includes('lama');
+        } catch (e) { return false; }
     };
 
     return (
@@ -156,8 +182,8 @@ export default function Projects() {
 
                 <SectionWrapper>
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold text-white mb-2">{t.projects_title}</h2>
-                        <p className="text-gray-500">{t.projects_subtitle}</p>
+                        <h2 className="text-4xl font-bold text-white mb-2">{t.projects_title || 'Projects'}</h2>
+                        <p className="text-gray-500">{t.projects_subtitle || 'Showcase'}</p>
                     </div>
                 </SectionWrapper>
 
@@ -166,9 +192,9 @@ export default function Projects() {
                     <div className="flex justify-center mb-12">
                         <div className="flex bg-black/40 backdrop-blur-md p-1.5 rounded-full border border-white/10 relative">
                             {[
-                                { id: 'projects', label: t.projects_tab_projects },
-                                { id: 'certificates', label: t.projects_tab_certs },
-                                { id: 'skills', label: t.projects_tab_skills }
+                                { id: 'projects', label: t.projects_tab_projects || 'Projects' },
+                                { id: 'certificates', label: t.projects_tab_certs || 'Certificates' },
+                                { id: 'skills', label: t.projects_tab_skills || 'Skills' }
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
@@ -190,53 +216,50 @@ export default function Projects() {
                 </SectionWrapper>
 
                 {/* Content Grid */}
-                <div className="min-h-[400px]">
+                <div className="min-h-[500px] w-full relative">
                     <AnimatePresence mode='wait'>
 
                         {/* PROJECTS TAB */}
                         {activeTab === 'projects' && (
                             <motion.div
+                                key="projects-grid"
                                 variants={{
                                     hidden: { opacity: 0 },
                                     show: {
                                         opacity: 1,
-                                        transition: {
-                                            staggerChildren: 0.2
-                                        }
+                                        transition: { staggerChildren: 0.15 }
                                     },
-                                    exit: { opacity: 0, y: -20 }
+                                    exit: { opacity: 0, y: -20, transition: { duration: 0.2 } }
                                 }}
                                 initial="hidden"
                                 animate="show"
                                 exit="exit"
                                 className="grid grid-cols-1 md:grid-cols-3 gap-8"
                             >
-                                {projects.map((p) => (
-                                    <motion.div
-                                        key={p.id}
-                                        variants={{
-                                            hidden: { y: 50, opacity: 0 },
-                                            show: { y: 0, opacity: 1 }
-                                        }}
-                                        whileHover={{ y: -10, scale: 1.02, rotateX: 5, rotateY: 5 }}
-                                        onClick={() => setSelectedProject(p)}
-                                        className="group relative h-80 bg-gray-900 rounded-2xl overflow-hidden cursor-pointer border border-white/5 shadow-2xl transform transition-all duration-500 perspective-1000"
-                                    >
-                                        <img src={p.image_url} alt={p.title} className="w-full h-full object-cover opacity-70 group-hover:scale-110 transition-transform duration-700" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-6">
-                                            <motion.div
-                                                initial={{ y: 20, opacity: 0 }}
-                                                whileInView={{ y: 0, opacity: 1 }}
-                                                className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
-                                            >
-                                                <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">{p.title}</h3>
-                                                <p className="text-gray-300 text-sm line-clamp-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">{p.description}</p>
-                                                <span className="inline-block px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-full shadow-lg shadow-cyan-500/30">
-                                                    {t.projects_view_details}
-                                                </span>
-                                            </motion.div>
-                                        </div>
-                                    </motion.div>
+                                {Array.isArray(projects) && projects.map((p) => (
+                                    p ? (
+                                        <motion.div
+                                            key={p.id || Math.random()}
+                                            variants={{
+                                                hidden: { y: 30, opacity: 0 },
+                                                show: { y: 0, opacity: 1 }
+                                            }}
+                                            whileHover={{ y: -8, scale: 1.02 }}
+                                            onClick={() => setSelectedProject(p)}
+                                            className="group relative h-80 bg-gray-900 rounded-2xl overflow-hidden cursor-pointer border border-white/5 shadow-xl transform transition-all duration-300"
+                                        >
+                                            <img src={p.image_url} alt={p.title || 'Project'} className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-6">
+                                                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                    <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">{p.title || 'Untitled'}</h3>
+                                                    <p className="text-gray-300 text-sm line-clamp-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{p.description || ''}</p>
+                                                    <span className="inline-block px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-full shadow-lg transition-colors">
+                                                        {t.projects_view_details || 'View Details'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ) : null
                                 ))}
                             </motion.div>
                         )}
@@ -244,32 +267,33 @@ export default function Projects() {
                         {/* CERTIFICATES TAB */}
                         {activeTab === 'certificates' && (
                             <motion.div
+                                key="certs-grid"
                                 variants={{
                                     hidden: { opacity: 0 },
                                     show: {
                                         opacity: 1,
-                                        transition: {
-                                            staggerChildren: 0.1
-                                        }
-                                    }
+                                        transition: { staggerChildren: 0.1 }
+                                    },
+                                    exit: { opacity: 0 }
                                 }}
                                 initial="hidden"
                                 animate="show"
+                                exit="exit"
                                 className="grid grid-cols-1 md:grid-cols-3 gap-8"
                             >
                                 {certificates.map((c, i) => (
                                     <motion.div
                                         key={i}
                                         variants={{
-                                            hidden: { scale: 0.8, opacity: 0 },
+                                            hidden: { scale: 0.9, opacity: 0 },
                                             show: { scale: 1, opacity: 1 }
                                         }}
-                                        whileHover={{ scale: 1.05, rotate: 1 }}
-                                        className="h-64 bg-gray-900 rounded-2xl border border-white/5 relative overflow-hidden group cursor-default shadow-lg hover:shadow-cyan-500/20 hover:border-cyan-500/50 transition-all"
+                                        whileHover={{ scale: 1.05 }}
+                                        className="h-80 bg-gray-900 rounded-2xl border border-white/5 relative overflow-hidden group cursor-default shadow-lg transition-all"
                                     >
                                         <img src={c.img} className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/60 group-hover:bg-black/40 transition-all backdrop-blur-[2px] group-hover:backdrop-blur-none">
-                                            <h3 className="font-bold text-xl text-white mb-2 drop-shadow-md border-b-2 border-cyan-500 pb-1">{c.title}</h3>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/60 group-hover:bg-black/50 transition-all backdrop-blur-[2px] group-hover:backdrop-blur-none">
+                                            <h3 className="font-bold text-xl text-white mb-2 drop-shadow-md text-center">{c.title}</h3>
                                             <span className="text-cyan-400 text-sm opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all font-mono bg-black/50 px-3 py-1 rounded-full">{c.desc}</span>
                                         </div>
                                     </motion.div>
@@ -280,14 +304,16 @@ export default function Projects() {
                         {/* SKILLS TAB - GROUPED */}
                         {activeTab === 'skills' && (
                             <motion.div
-                                initial={{ opacity: 0, x: -50 }}
+                                key="skills-grid"
+                                initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.5 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ duration: 0.4 }}
                                 className="flex flex-col items-start w-full max-w-5xl mx-auto"
                             >
-                                {renderSkillGroup('fe', t.projects_skill_fe)}
-                                {renderSkillGroup('be', t.projects_skill_be)}
-                                {renderSkillGroup('db', t.projects_skill_db)}
+                                {renderSkillGroup('fe', t.projects_skill_fe || 'Frontend')}
+                                {renderSkillGroup('be', t.projects_skill_be || 'Backend')}
+                                {renderSkillGroup('db', t.projects_skill_db || 'Database')}
                                 {renderSkillGroup('tools', "Tools & DevOps")}
                             </motion.div>
                         )}
@@ -305,14 +331,39 @@ export default function Projects() {
                         >
                             <motion.div
                                 initial={{ scale: 0.9, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 50 }}
-                                className={`bg-[#0a0a0a] w-full ${selectedProject.id === 'interactive_ml' ? 'max-w-7xl h-[90vh]' : 'max-w-4xl max-h-[90vh]'} overflow-hidden rounded-3xl border border-white/10 shadow-2xl relative flex flex-col`}
+                                className={`bg-[#0a0a0a] w-full max-w-7xl h-[85vh] overflow-hidden rounded-3xl border border-white/10 shadow-2xl relative flex flex-col`}
                                 onClick={e => e.stopPropagation()}
                             >
                                 <button onClick={() => setSelectedProject(null)} className="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 rounded-full text-white flex items-center justify-center hover:bg-red-500 transition-colors border border-white/10">✕</button>
 
-                                {selectedProject.id === 'interactive_ml' ? (
-                                    <div className="w-full h-full p-6 pt-16 overflow-y-auto">
-                                        <MLDashboard />
+                                {isInteractiveML(selectedProject) ? (
+                                    <div className="w-full h-full p-2 md:p-6 overflow-hidden flex flex-col">
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar rounded-xl">
+                                            <MLDashboard />
+                                        </div>
+                                    </div>
+                                ) : isEcommerce(selectedProject) ? (
+                                    <div className="w-full h-full relative overflow-hidden rounded-xl bg-gray-900 border border-white/10">
+                                        <EcommerceSystem />
+                                    </div>
+                                ) : isLegacy(selectedProject) ? (
+                                    <div className="w-full h-full flex flex-col relative bg-white">
+                                        {/* Loading Spinner for Iframe */}
+                                        {iframeLoading && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10 transition-opacity duration-500">
+                                                <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                                                <p className="text-gray-400 animate-pulse">Loading Legacy Site...</p>
+                                            </div>
+                                        )}
+
+                                        <div className="flex-1 bg-white relative">
+                                            <iframe
+                                                src={selectedProject.link_url}
+                                                className="w-full h-full border-0"
+                                                title="Legacy Portfolio"
+                                                onLoad={() => setIframeLoading(false)}
+                                            />
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="overflow-y-auto h-full">
@@ -330,12 +381,12 @@ export default function Projects() {
                                             <div className="flex gap-4">
                                                 {selectedProject.link_url && (
                                                     <a href={selectedProject.link_url} target="_blank" className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition-colors">
-                                                        {t.projects_visit_site}
+                                                        {t.projects_visit_site || 'Visit Site'}
                                                     </a>
                                                 )}
                                                 {selectedProject.code_url && (
                                                     <a href={selectedProject.code_url} target="_blank" className="px-6 py-3 border border-white/20 hover:bg-white/10 text-white rounded-xl font-bold transition-colors">
-                                                        {t.projects_view_code}
+                                                        {t.projects_view_code || 'View Code'}
                                                     </a>
                                                 )}
                                             </div>

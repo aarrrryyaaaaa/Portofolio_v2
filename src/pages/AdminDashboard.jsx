@@ -16,6 +16,7 @@ export default function AdminDashboard() {
 
     // CMS Form States
     const [showProjectModal, setShowProjectModal] = useState(false);
+    const [editingProject, setEditingProject] = useState(null);
     const [newProject, setNewProject] = useState({ title: '', description: '', image_url: '', details: '', link_url: '', code_url: '' });
 
     const [showBlogModal, setShowBlogModal] = useState(false);
@@ -69,19 +70,42 @@ export default function AdminDashboard() {
     };
 
     // --- CMS ACTIONS ---
-    const handleAddProject = async (e) => {
+    const handleProjectSubmit = async (e) => {
         e.preventDefault();
         try {
-            const { error } = await supabase.from('projects').insert([newProject]);
-            if (error) throw error;
+            if (editingProject) {
+                // UPDATE EXISTING
+                const { error } = await supabase.from('projects').update(newProject).eq('id', editingProject.id);
+                if (error) throw error;
+                alert("Project Updated!");
+            } else {
+                // INSERT NEW
+                const { error } = await supabase.from('projects').insert([newProject]);
+                if (error) throw error;
+                alert("Project Added!");
+            }
+
             setShowProjectModal(false);
+            setEditingProject(null);
             setNewProject({ title: '', description: '', image_url: '', details: '', link_url: '', code_url: '' });
             fetchData();
-            alert("Project Added!");
         } catch (err) {
             console.error(err);
-            alert("Error adding project: " + err.message);
+            alert("Error saving project: " + err.message);
         }
+    };
+
+    const openEditModal = (project) => {
+        setEditingProject(project);
+        setNewProject({
+            title: project.title,
+            description: project.description,
+            image_url: project.image_url,
+            details: project.details,
+            link_url: project.link_url,
+            code_url: project.code_url
+        });
+        setShowProjectModal(true);
     };
 
     const handleAddBlog = async (e) => {
@@ -358,45 +382,50 @@ export default function AdminDashboard() {
 
                 {/* --- CMS TAB (FUNCTIONAL) --- */}
                 {activeTab === 'content' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* PROJECTS MANAGEMENT */}
-                        <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 h-full flex flex-col">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-cyan-400">Projects ({projects.length})</h2>
-                                <button onClick={() => setShowProjectModal(true)} className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Add New</button>
-                            </div>
-                            <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
-                                {projects.map(p => (
-                                    <div key={p.id} className="p-4 bg-black/40 rounded-xl border border-gray-800 flex justify-between items-center group hover:border-cyan-500/30 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <img src={p.image_url} className="w-10 h-10 rounded bg-gray-800 object-cover" />
-                                            <div>
-                                                <div className="font-bold text-white text-sm">{p.title}</div>
-                                                <div className="text-xs text-gray-500 truncate max-w-[200px]">{p.description}</div>
+                    <div className="flex flex-col gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* PROJECTS MANAGEMENT */}
+                            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 h-full flex flex-col">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold text-cyan-400">Projects ({projects.length})</h2>
+                                    <button onClick={() => { setEditingProject(null); setNewProject({ title: '', description: '', image_url: '', details: '', link_url: '', code_url: '' }); setShowProjectModal(true); }} className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Add New</button>
+                                </div>
+                                <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                                    {projects.map(p => (
+                                        <div key={p.id} className="p-4 bg-black/40 rounded-xl border border-gray-800 flex justify-between items-center group hover:border-cyan-500/30 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <img src={p.image_url} className="w-10 h-10 rounded bg-gray-800 object-cover" />
+                                                <div>
+                                                    <div className="font-bold text-white text-sm">{p.title}</div>
+                                                    <div className="text-xs text-gray-500 truncate max-w-[200px]">{p.description}</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => openEditModal(p)} className="text-cyan-500 hover:text-cyan-400 text-xs bg-cyan-900/10 p-2 rounded hover:bg-cyan-900/30 transition-colors">Edit</button>
+                                                <button onClick={() => deleteItem('projects', p.id)} className="text-red-500 hover:text-red-400 text-xs bg-red-900/10 p-2 rounded hover:bg-red-900/30 transition-colors">Delete</button>
                                             </div>
                                         </div>
-                                        <button onClick={() => deleteItem('projects', p.id)} className="text-red-500 hover:text-red-400 text-xs bg-red-900/10 p-2 rounded hover:bg-red-900/30 transition-colors">Delete</button>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* BLOG MANAGEMENT */}
-                        <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 h-full flex flex-col">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-purple-400">Blog Posts ({blogs.length})</h2>
-                                <button onClick={() => setShowBlogModal(true)} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Add Post</button>
-                            </div>
-                            <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
-                                {blogs.map(b => (
-                                    <div key={b.id} className="p-4 bg-black/40 rounded-xl border border-gray-800 flex justify-between items-center group hover:border-purple-500/30 transition-colors">
-                                        <div>
-                                            <div className="font-bold text-white text-sm">{b.title}</div>
-                                            <div className="text-xs text-gray-500">{new Date(b.created_at).toLocaleDateString()}</div>
+                            {/* BLOG MANAGEMENT */}
+                            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-700 h-full flex flex-col">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold text-purple-400">Blog Posts ({blogs.length})</h2>
+                                    <button onClick={() => setShowBlogModal(true)} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Add Post</button>
+                                </div>
+                                <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                                    {blogs.map(b => (
+                                        <div key={b.id} className="p-4 bg-black/40 rounded-xl border border-gray-800 flex justify-between items-center group hover:border-purple-500/30 transition-colors">
+                                            <div>
+                                                <div className="font-bold text-white text-sm">{b.title}</div>
+                                                <div className="text-xs text-gray-500">{new Date(b.created_at).toLocaleDateString()}</div>
+                                            </div>
+                                            <button onClick={() => deleteItem('blogs', b.id)} className="text-red-500 hover:text-red-400 text-xs bg-red-900/10 p-2 rounded hover:bg-red-900/30 transition-colors">Delete</button>
                                         </div>
-                                        <button onClick={() => deleteItem('blogs', b.id)} className="text-red-500 hover:text-red-400 text-xs bg-red-900/10 p-2 rounded hover:bg-red-900/30 transition-colors">Delete</button>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -408,8 +437,8 @@ export default function AdminDashboard() {
                 {showProjectModal && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-gray-900 w-full max-w-lg p-6 rounded-2xl border border-gray-700 shadow-2xl">
-                            <h2 className="text-xl font-bold mb-4 text-white">Add New Project</h2>
-                            <form onSubmit={handleAddProject} className="space-y-3">
+                            <h2 className="text-xl font-bold mb-4 text-white">{editingProject ? "Edit Project" : "Add New Project"}</h2>
+                            <form onSubmit={handleProjectSubmit} className="space-y-3">
                                 <input required placeholder="Title" className="w-full bg-black/50 border border-gray-700 p-3 rounded text-white" value={newProject.title} onChange={e => setNewProject({ ...newProject, title: e.target.value })} />
                                 <input required placeholder="Short Description" className="w-full bg-black/50 border border-gray-700 p-3 rounded text-white" value={newProject.description} onChange={e => setNewProject({ ...newProject, description: e.target.value })} />
                                 <input required placeholder="Image URL (Unsplash/Imgur)" className="w-full bg-black/50 border border-gray-700 p-3 rounded text-white" value={newProject.image_url} onChange={e => setNewProject({ ...newProject, image_url: e.target.value })} />
@@ -420,7 +449,9 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="flex gap-2 pt-4">
                                     <button type="button" onClick={() => setShowProjectModal(false)} className="flex-1 py-3 rounded font-bold bg-gray-800 text-gray-300 hover:bg-gray-700">Cancel</button>
-                                    <button type="submit" className="flex-1 py-3 rounded font-bold bg-cyan-600 text-white hover:bg-cyan-500">Save Project</button>
+                                    <button type="submit" className="flex-1 py-3 rounded font-bold bg-cyan-600 text-white hover:bg-cyan-500">
+                                        {editingProject ? "Update Project" : "Save Project"}
+                                    </button>
                                 </div>
                             </form>
                         </motion.div>

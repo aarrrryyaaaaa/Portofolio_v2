@@ -151,39 +151,39 @@ export default function Contact() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
                     {/* LEFT COLUMN: Contact Form + Blog */}
-                    <div className="flex flex-col gap-10">
+                    <div className="flex flex-col gap-6">
                         {/* Contact Form */}
                         <SectionWrapper delay={0.2}>
-                            <div className={cardStyle}>
-                                <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                            <div className="bg-gray-900/60 p-6 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl transition-shadow w-full">
+                                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                                     <span className="mr-2"></span> {t.contact_title} {t.contact_title_highlight}
                                 </h3>
-                                <form onSubmit={handleContactSubmit} className="space-y-4">
+                                <form onSubmit={handleContactSubmit} className="space-y-3">
                                     <input
                                         type="text"
                                         placeholder={t.contact_form_name}
                                         value={contactName}
                                         onChange={e => setContactName(e.target.value)}
-                                        className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                        className="w-full bg-white/5 border border-gray-600 rounded-lg p-3 text-white text-sm focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
                                     />
                                     <input
                                         type="email"
                                         placeholder={t.contact_form_email}
                                         value={contactEmail}
                                         onChange={e => setContactEmail(e.target.value)}
-                                        className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                        className="w-full bg-white/5 border border-gray-600 rounded-lg p-3 text-white text-sm focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
                                     />
                                     <textarea
-                                        rows="4"
+                                        rows="3"
                                         placeholder={t.contact_form_msg}
                                         value={contactMsg}
                                         onChange={e => setContactMsg(e.target.value)}
-                                        className="w-full bg-white/5 border border-gray-600 rounded-xl p-4 text-white focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
+                                        className="w-full bg-white/5 border border-gray-600 rounded-lg p-3 text-white text-sm focus:border-cyan-500 focus:bg-white/10 outline-none transition-all placeholder:text-gray-500"
                                     ></textarea>
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg"
+                                        className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 rounded-lg transition-all shadow-md text-sm"
                                     >
                                         {contactStatus || t.contact_btn_send}
                                     </motion.button>
@@ -193,57 +193,56 @@ export default function Contact() {
 
                         {/* Blog Card (Embed) */}
                         <SectionWrapper delay={0.3}>
-                            <div className="bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-purple-500/10 transition-shadow">
-                                <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-                                    <span className="mr-2">📝</span> {t.blog_title}
+                            <div className="bg-gray-900/60 p-6 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-purple-500/10 transition-shadow">
+                                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                                    <span className="mr-2"></span> {t.blog_title}
                                 </h3>
-                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                <div className="max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
                                     <Blog isEmbedded={true} />
                                 </div>
                             </div>
                         </SectionWrapper>
                     </div>
 
-                    {/* RIGHT COLUMN: Comment Board (Tall) */}
+                    {/* RIGHT COLUMN: Comment Board */}
                     <SectionWrapper delay={0.4}>
-                        <div className="bg-gray-900/60 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-cyan-500/10 transition-shadow flex flex-col relative overflow-hidden h-full min-h-[500px]">
+                        <div className="bg-gray-900/60 p-6 rounded-3xl border border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-cyan-500/10 transition-shadow flex flex-col relative overflow-hidden h-[600px]">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
 
-                            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-                                <span className="mr-2"></span> {t.contact_wall_title}
+                            <h3 className="text-xl font-bold text-white mb-4">
+                                {t.contact_wall_title}
                             </h3>
 
                             {/* Scrollable Comments */}
-                            <div className="flex-1 overflow-y-auto space-y-4 mb-6 pr-2 custom-scrollbar scroll-smooth">
+                            <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2 custom-scrollbar scroll-smooth">
                                 {comments.length === 0 && (
                                     <div className="text-center text-gray-500 py-10">{t.contact_no_comments}</div>
                                 )}
                                 {comments.map((c) => (
                                     <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
+                                        initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         key={c.id}
-                                        className={`group flex gap-3 p-4 rounded-2xl border ${c.is_pinned ? 'bg-yellow-500/10 border-yellow-500' : c.is_author ? 'bg-cyan-900/10 border-cyan-500/30 ml-8' : 'bg-white/5 border-gray-700/50 mr-8'} hover:bg-white/10 transition-colors`}
+                                        className={`group flex gap-3 p-3 rounded-xl border ${c.is_pinned ? 'bg-yellow-500/10 border-yellow-500' : c.is_author ? 'bg-cyan-900/10 border-cyan-500/30 ml-4' : 'bg-white/5 border-gray-700/50 mr-4'} hover:bg-white/10 transition-colors`}
                                     >
-                                        <div className="shrink-0 pt-1">
+                                        <div className="shrink-0 pt-0.5">
                                             <Avatar name={c.name} />
                                         </div>
-                                        <div>
-                                            <div className="flex items-baseline gap-2 mb-1">
-                                                <span className={`font-bold text-sm ${c.is_author ? 'text-cyan-400' : 'text-white'}`}>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-baseline gap-2 mb-0.5 flex-wrap">
+                                                <span className={`font-bold text-xs ${c.is_author ? 'text-cyan-400' : 'text-white'}`}>
                                                     {c.name}
-                                                    {c.is_author && <span className="text-[10px] bg-cyan-500 text-black px-1 rounded ml-1">ADMIN</span>}
-                                                    {c.is_pinned && <span className="text-[10px] bg-yellow-500 text-black px-1 rounded ml-1">📌 PINNED</span>}
-                                                    {c.is_liked_by_admin && <span className="text-[10px] bg-pink-500 text-white px-1 rounded ml-1">❤️ LIKED</span>}
+                                                    {c.is_author && <span className="text-[9px] bg-cyan-500 text-black px-1 rounded ml-1">ADMIN</span>}
+                                                    {c.is_pinned && <span className="text-[9px] bg-yellow-500 text-black px-1 rounded ml-1">📌</span>}
                                                 </span>
-                                                <span className="text-[10px] text-gray-500">{new Date(c.created_at).toLocaleDateString()}</span>
+                                                <span className="text-[9px] text-gray-500">{new Date(c.created_at).toLocaleDateString()}</span>
                                             </div>
-                                            <p className="text-gray-300 text-sm leading-relaxed">{c.message}</p>
+                                            <p className="text-gray-300 text-xs leading-relaxed break-words">{c.message}</p>
 
                                             {/* Admin Reply */}
                                             {c.admin_reply && (
-                                                <div className="mt-2 p-3 bg-cyan-900/20 border-l-2 border-cyan-500 rounded-r text-sm">
-                                                    <div className="text-cyan-400 font-bold text-xs mb-1">Admin Reply:</div>
+                                                <div className="mt-1.5 p-2 bg-cyan-900/20 border-l-2 border-cyan-500 rounded-r text-xs">
+                                                    <div className="text-cyan-400 font-bold text-[10px] mb-0.5">Admin:</div>
                                                     <p className="text-gray-300">{c.admin_reply}</p>
                                                 </div>
                                             )}
@@ -253,13 +252,13 @@ export default function Contact() {
                             </div>
 
                             {/* Post Comment */}
-                            <form onSubmit={handleCommentSubmit} className="space-y-3 pt-4 border-t border-gray-700/50">
+                            <form onSubmit={handleCommentSubmit} className="space-y-2 pt-3 border-t border-gray-700/50">
                                 <div className="relative">
                                     <input
                                         value={name}
                                         onChange={e => setName(e.target.value)}
                                         placeholder={t.contact_form_name}
-                                        className="w-full bg-black/40 border border-gray-600 rounded-lg p-3 text-sm text-white focus:border-cyan-500 outline-none"
+                                        className="w-full bg-black/40 border border-gray-600 rounded-lg p-2 text-xs text-white focus:border-cyan-500 outline-none"
                                     />
                                 </div>
                                 <div className="flex gap-2">
@@ -267,10 +266,10 @@ export default function Contact() {
                                         value={msg}
                                         onChange={e => setMsg(e.target.value)}
                                         placeholder={t.contact_post_placeholder}
-                                        className="flex-1 bg-black/40 border border-gray-600 rounded-lg p-3 text-sm text-white focus:border-cyan-500 outline-none"
+                                        className="flex-1 bg-black/40 border border-gray-600 rounded-lg p-2 text-xs text-white focus:border-cyan-500 outline-none"
                                     />
-                                    <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 rounded-lg text-sm font-bold shadow-lg transition-all">
-                                        {t.contact_btn_post}
+                                    <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 rounded-lg text-xs font-bold shadow-lg transition-all">
+                                        Post
                                     </button>
                                 </div>
                             </form>
