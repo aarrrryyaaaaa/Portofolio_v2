@@ -37,9 +37,11 @@ export default function Projects() {
 
     const fetchData = async () => {
         try {
-            const { data: p } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-            const { data: s } = await supabase.from('skills').select('*').order('level', { ascending: false });
-            const { data: c } = await supabase.from('certificates').select('*').order('created_at', { ascending: false });
+            const { data: p, error: pErr } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+            const { data: s, error: sErr } = await supabase.from('skills').select('*').order('level', { ascending: false });
+            const { data: c, error: cErr } = await supabase.from('certificates').select('*');
+
+            if (cErr) console.error("Certificates fetch error:", cErr);
 
             setProjects(p || []);
             setSkills(s || []);
@@ -229,13 +231,16 @@ export default function Projects() {
                                             hidden: { scale: 0.9, opacity: 0 },
                                             show: { scale: 1, opacity: 1 }
                                         }}
-                                        whileHover={{ scale: 1.05 }}
-                                        className="h-80 bg-gray-900 rounded-2xl border border-white/5 relative overflow-hidden group cursor-default shadow-lg transition-all"
+                                        whileHover={{ y: -8, scale: 1.02 }}
+                                        onClick={() => setSelectedProject(c)}
+                                        className="h-80 bg-[#0a0a0a] rounded-2xl border border-white/5 relative overflow-hidden group cursor-pointer shadow-lg shadow-black/50 transition-all"
                                     >
-                                        <img src={c.image_url} alt={c.title} className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/60 group-hover:bg-black/50 transition-all backdrop-blur-[2px] group-hover:backdrop-blur-none">
-                                            <h3 className="font-bold text-xl text-white mb-2 drop-shadow-md text-center">{c.title}</h3>
-                                            <span className="text-orange-400 text-sm opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all font-mono bg-black/50 px-3 py-1 rounded-full">{c.issuer} • {c.year}</span>
+                                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-6">
+                                            <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                <h3 className="font-bold text-lg text-white mb-1 drop-shadow-md">{c.name}</h3>
+                                                <span className="text-orange-400 text-xs opacity-0 group-hover:opacity-100 transition-all font-mono font-bold">{c.issuer} • {c.year}</span>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -301,15 +306,17 @@ export default function Projects() {
                                     <div className="overflow-y-auto h-full">
                                         <div className="h-64 w-full relative">
                                             <img src={selectedProject.image_url} className="w-full h-full object-cover" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
                                             <div className="absolute bottom-6 left-8">
-                                                <h2 className="text-4xl font-bold text-white mb-2">{selectedProject.title}</h2>
-                                                <p className="text-orange-400 text-lg">{selectedProject.description}</p>
+                                                <h2 className="text-4xl font-bold text-white mb-2">{selectedProject.title || selectedProject.name}</h2>
+                                                <p className="text-orange-400 text-lg">{selectedProject.description || `${selectedProject.issuer} • ${selectedProject.year}`}</p>
                                             </div>
                                         </div>
 
                                         <div className="p-8">
-                                            <p className="text-gray-300 leading-relaxed text-lg mb-8">{selectedProject.details}</p>
+                                            {selectedProject.details && (
+                                                <p className="text-gray-300 leading-relaxed text-lg mb-8">{selectedProject.details}</p>
+                                            )}
                                             <div className="flex gap-4">
                                                 {selectedProject.link_url && (
                                                     <a href={selectedProject.link_url} target="_blank" className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-orange-600 hover:from-cyan-500 hover:to-orange-500 text-white rounded-xl font-bold transition-colors">

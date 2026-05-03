@@ -40,7 +40,7 @@ export default function AdminDashboard() {
         const { data: m } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
         const { data: b } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
         // Assume certificates are stored in a separate table
-        const { data: certs } = await supabase.from('certificates').select('*').order('created_at', { ascending: false });
+        const { data: certs } = await supabase.from('certificates').select('*');
 
         if (p) setProjects(p);
         if (s) setSkills(s);
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
                         {activeTab === 'certificates' && certificates.map(c => (
                             <div key={c.id} className="bg-black/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center group hover:border-cyan-500/30 transition-all">
                                 <div>
-                                    <h3 className="font-black text-sm uppercase text-white">{c.title}</h3>
+                                    <h3 className="font-black text-sm uppercase text-white">{c.name}</h3>
                                     <p className="text-[10px] text-gray-500 font-bold uppercase">{c.issuer} • {c.year}</p>
                                 </div>
                                 <div className="flex gap-4">
@@ -279,7 +279,7 @@ export default function AdminDashboard() {
 
                                 {activeTab === 'certificates' && (
                                     <>
-                                        <input placeholder="CERTIFICATE TITLE" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <input placeholder="CERTIFICATE TITLE" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
                                         <input placeholder="ISSUER" value={formData.issuer || ''} onChange={e => setFormData({...formData, issuer: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
                                         <input placeholder="YEAR" value={formData.year || ''} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
                                         <div className="w-full bg-black border border-white/10 p-4 rounded-xl">
