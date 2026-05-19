@@ -25,7 +25,14 @@ export default function Projects() {
     const [skills, setSkills] = useState([]);
     const [certificates, setCertificates] = useState([]);
     const [selectedProject, setSelectedProject] = useState(null);
+    const [selectedCert, setSelectedCert] = useState(null);
+    const [isLandscape, setIsLandscape] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const handleProjectImageLoad = (e) => {
+        const { naturalWidth, naturalHeight } = e.target;
+        setIsLandscape(naturalWidth > naturalHeight);
+    };
 
     useEffect(() => {
         if (selectedProject) setIframeLoading(true);
@@ -232,7 +239,7 @@ export default function Projects() {
                                             show: { scale: 1, opacity: 1 }
                                         }}
                                         whileHover={{ y: -8, scale: 1.02 }}
-                                        onClick={() => setSelectedProject(c)}
+                                        onClick={() => setSelectedCert(c)}
                                         className="h-80 bg-[#0a0a0a] rounded-2xl border border-white/5 relative overflow-hidden group cursor-pointer shadow-lg shadow-black/50 transition-all"
                                     >
                                         <img src={c.image_url} alt={c.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -268,7 +275,7 @@ export default function Projects() {
                     )}
                 </div>
 
-                {/* MODAL OVERLAY */}
+                {/* PROJECT MODAL */}
                 <AnimatePresence>
                     {selectedProject && (
                         <motion.div
@@ -278,60 +285,134 @@ export default function Projects() {
                         >
                             <motion.div
                                 initial={{ scale: 0.9, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 50 }}
-                                className={`bg-[#0a0a0a] w-full max-w-7xl h-[85vh] overflow-hidden rounded-3xl border border-white/10 shadow-2xl relative flex flex-col`}
+                                className="bg-[#0a0a0a] w-full max-w-5xl h-[90vh] overflow-hidden rounded-3xl border border-white/10 shadow-2xl relative flex flex-col"
                                 onClick={e => e.stopPropagation()}
                             >
                                 <button onClick={() => setSelectedProject(null)} className="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 rounded-full text-white flex items-center justify-center hover:bg-red-500 transition-colors border border-white/10">✕</button>
 
                                 {isLegacy(selectedProject) ? (
                                     <div className="w-full h-full flex flex-col relative bg-white">
-                                        {/* Loading Spinner for Iframe */}
                                         {iframeLoading && (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10 transition-opacity duration-500">
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10">
                                                 <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                                                 <p className="text-gray-400 animate-pulse">Loading Legacy Site...</p>
                                             </div>
                                         )}
-
                                         <div className="flex-1 bg-white relative">
-                                            <iframe
-                                                src={selectedProject.link_url}
-                                                className="w-full h-full border-0"
-                                                title="Legacy Portfolio"
-                                                onLoad={() => setIframeLoading(false)}
-                                            />
+                                            <iframe src={selectedProject.link_url} className="w-full h-full border-0" title="Legacy Portfolio" onLoad={() => setIframeLoading(false)} />
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="overflow-y-auto h-full">
-                                        <div className="h-64 w-full relative">
-                                            <img src={selectedProject.image_url} className="w-full h-full object-cover" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
-                                            <div className="absolute bottom-6 left-8">
-                                                <h2 className="text-4xl font-bold text-white mb-2">{selectedProject.title || selectedProject.name}</h2>
-                                                <p className="text-orange-400 text-lg">{selectedProject.description || `${selectedProject.issuer} • ${selectedProject.year}`}</p>
+                                    isLandscape ? (
+                                        /* LANDSCAPE: compact image on top, content below */
+                                        <div className="overflow-y-auto h-full custom-scrollbar flex flex-col">
+                                            <div className="w-full flex-shrink-0 bg-black flex items-center justify-center p-6 border-b border-white/5">
+                                                <img
+                                                    src={selectedProject.image_url}
+                                                    className="max-h-64 w-auto rounded-xl object-contain shadow-xl"
+                                                    alt={selectedProject.title}
+                                                    onLoad={handleProjectImageLoad}
+                                                />
+                                            </div>
+                                            <div className="p-8 flex flex-col gap-6">
+                                                <div>
+                                                    <h2 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">{selectedProject.title}</h2>
+                                                    <p className="text-orange-400 font-semibold text-sm">{selectedProject.description}</p>
+                                                </div>
+                                                {selectedProject.details && (
+                                                    <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                                                        <h3 className="text-xs font-black uppercase tracking-widest text-orange-400 mb-3">About This Project</h3>
+                                                        <p className="text-gray-300 leading-relaxed text-sm">{selectedProject.details}</p>
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-wrap gap-4 pb-4">
+                                                    {selectedProject.link_url && (
+                                                        <a href={selectedProject.link_url} target="_blank" className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-orange-600 hover:from-cyan-500 hover:to-orange-500 text-white rounded-xl font-bold transition-all hover:scale-105 text-sm">
+                                                            <span>🔗</span> {t.projects_visit_site || 'Visit Site'}
+                                                        </a>
+                                                    )}
+                                                    {selectedProject.code_url && (
+                                                        <a href={selectedProject.code_url} target="_blank" className="flex items-center gap-2 px-6 py-3 border border-white/20 hover:bg-white/10 text-white rounded-xl font-bold transition-all hover:scale-105 text-sm">
+                                                            <span>💻</span> {t.projects_view_code || 'View Code'}
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-
-                                        <div className="p-8">
-                                            {selectedProject.details && (
-                                                <p className="text-gray-300 leading-relaxed text-lg mb-8">{selectedProject.details}</p>
-                                            )}
-                                            <div className="flex gap-4">
-                                                {selectedProject.link_url && (
-                                                    <a href={selectedProject.link_url} target="_blank" className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-orange-600 hover:from-cyan-500 hover:to-orange-500 text-white rounded-xl font-bold transition-colors">
-                                                        {t.projects_visit_site || 'Visit Site'}
-                                                    </a>
+                                    ) : (
+                                        /* PORTRAIT: image fills left column at full height */
+                                        <div className="flex h-full">
+                                            <div className="w-1/2 flex-shrink-0 relative hidden md:block">
+                                                <img src={selectedProject.image_url} className="w-full h-full object-cover" alt={selectedProject.title} onLoad={handleProjectImageLoad} />
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0a0a0a]" />
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex flex-col justify-start gap-6">
+                                                <div className="md:hidden w-full h-52 relative rounded-2xl overflow-hidden flex-shrink-0">
+                                                    <img src={selectedProject.image_url} className="w-full h-full object-cover" alt={selectedProject.title} />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                                                </div>
+                                                <div className="pt-4">
+                                                    <h2 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">{selectedProject.title}</h2>
+                                                    <p className="text-orange-400 font-semibold text-sm">{selectedProject.description}</p>
+                                                </div>
+                                                {selectedProject.details && (
+                                                    <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                                                        <h3 className="text-xs font-black uppercase tracking-widest text-orange-400 mb-3">About This Project</h3>
+                                                        <p className="text-gray-300 leading-relaxed text-sm">{selectedProject.details}</p>
+                                                    </div>
                                                 )}
-                                                {selectedProject.code_url && (
-                                                    <a href={selectedProject.code_url} target="_blank" className="px-6 py-3 border border-white/20 hover:bg-white/10 text-white rounded-xl font-bold transition-colors">
-                                                        {t.projects_view_code || 'View Code'}
-                                                    </a>
-                                                )}
+                                                <div className="flex flex-wrap gap-4 pb-4">
+                                                    {selectedProject.link_url && (
+                                                        <a href={selectedProject.link_url} target="_blank" className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-orange-600 hover:from-cyan-500 hover:to-orange-500 text-white rounded-xl font-bold transition-all hover:scale-105 text-sm">
+                                                            <span>🔗</span> {t.projects_visit_site || 'Visit Site'}
+                                                        </a>
+                                                    )}
+                                                    {selectedProject.code_url && (
+                                                        <a href={selectedProject.code_url} target="_blank" className="flex items-center gap-2 px-6 py-3 border border-white/20 hover:bg-white/10 text-white rounded-xl font-bold transition-all hover:scale-105 text-sm">
+                                                            <span>💻</span> {t.projects_view_code || 'View Code'}
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )
                                 )}
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* CERTIFICATE LIGHTBOX MODAL */}
+                <AnimatePresence>
+                    {selectedCert && (
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 md:p-8"
+                            onClick={() => setSelectedCert(null)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                className="relative w-full max-w-4xl flex flex-col items-center"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <button onClick={() => setSelectedCert(null)} className="absolute -top-12 right-0 z-50 w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center hover:bg-red-500 transition-colors border border-white/20 text-lg">✕</button>
+                                {/* Full Certificate Image */}
+                                <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                                    <img
+                                        src={selectedCert.image_url}
+                                        alt={selectedCert.name}
+                                        className="w-full h-auto object-contain"
+                                    />
+                                </div>
+                                {/* Info Below */}
+                                <div className="mt-6 text-center">
+                                    <h2 className="text-2xl font-black text-white mb-2">{selectedCert.name}</h2>
+                                    <p className="text-orange-400 font-mono font-bold text-sm">{selectedCert.issuer} &bull; {selectedCert.year}</p>
+                                    {selectedCert.issuer && (
+                                        <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest">Tap outside to close</p>
+                                    )}
+                                </div>
                             </motion.div>
                         </motion.div>
                     )}
