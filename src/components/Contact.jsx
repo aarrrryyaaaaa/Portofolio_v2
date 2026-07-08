@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../lib/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
-import Blog from './Blog';
 
 const SectionWrapper = ({ children, delay = 0 }) => (
     <motion.div
@@ -42,7 +41,7 @@ const SocialIcon = ({ href, path, label, colorClass }) => (
     </motion.a>
 );
 
-export default function Contact() {
+export default function Contact({ onOpenAuth }) {
     const { t } = useLanguage();
     const [comments, setComments] = useState([]);
     const [name, setName] = useState('');
@@ -57,8 +56,15 @@ export default function Contact() {
 
     useEffect(() => {
         fetchComments();
-        const savedUser = localStorage.getItem('portfolio_user');
-        if (savedUser) setCurrentUser(JSON.parse(savedUser));
+        
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                if (profile) setCurrentUser(profile);
+            }
+        };
+        checkUser();
     }, []);
 
     const fetchComments = async () => {
@@ -150,14 +156,21 @@ export default function Contact() {
                             <div className="flex flex-col h-full">
                                 <div className="bg-zinc-900/50 p-8 rounded-[32px] border border-white/5 backdrop-blur-xl flex-1 flex flex-col justify-center mb-6">
                                     <h3 className="text-xl font-black uppercase mb-6 italic">Send Message</h3>
-                                    <form onSubmit={handleContactSubmit} className="space-y-4">
-                                        <input placeholder="NAME" value={contactName} onChange={e => setContactName(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs font-bold outline-none focus:border-orange-500 transition-all" required />
-                                        <input placeholder="EMAIL" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs font-bold outline-none focus:border-orange-500 transition-all" required />
-                                        <textarea placeholder="MESSAGE" rows="4" value={contactMsg} onChange={e => setContactMsg(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs font-bold outline-none focus:border-orange-500 transition-all resize-none" required />
-                                        <button className="w-full bg-gradient-to-r from-cyan-500 to-orange-500 text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest hover:from-cyan-400 hover:to-orange-400 transition-all shadow-lg shadow-orange-500/20">
-                                            {status || 'SEND MESSAGE'}
-                                        </button>
-                                    </form>
+                                    {currentUser ? (
+                                        <form onSubmit={handleContactSubmit} className="space-y-4">
+                                            <input placeholder="NAME" value={contactName} onChange={e => setContactName(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs font-bold outline-none focus:border-orange-500 transition-all" required />
+                                            <input placeholder="EMAIL" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs font-bold outline-none focus:border-orange-500 transition-all" required />
+                                            <textarea placeholder="MESSAGE" rows="4" value={contactMsg} onChange={e => setContactMsg(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs font-bold outline-none focus:border-orange-500 transition-all resize-none" required />
+                                            <button className="w-full bg-gradient-to-r from-cyan-500 to-orange-500 text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest hover:from-cyan-400 hover:to-orange-400 transition-all shadow-lg shadow-orange-500/20">
+                                                {status || 'SEND MESSAGE'}
+                                            </button>
+                                        </form>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center space-y-4 py-8">
+                                            <p className="text-xs font-bold text-gray-500 uppercase text-center">You must be logged in to send a direct message.</p>
+                                            <button onClick={onOpenAuth} className="bg-white text-black px-8 py-3 rounded-xl font-black uppercase text-xs hover:bg-orange-500 transition-all w-full md:w-auto">Login to Send Message</button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -245,11 +258,14 @@ export default function Contact() {
                             </div>
 
                             <form onSubmit={(e) => handleCommentSubmit(e)} className="space-y-3 pt-4 border-t border-white/5">
-                                {!currentUser && <input placeholder="YOUR NAME" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-white/10 p-3 rounded-xl text-white text-[10px] font-bold outline-none focus:border-orange-500" />}
-                                <div className="flex gap-2">
-                                    <input placeholder="WRITE A COMMENT..." value={msg} onChange={e => setMsg(e.target.value)} className="flex-1 bg-black border border-white/10 p-3 rounded-xl text-white text-[10px] font-bold outline-none focus:border-orange-500" required />
-                                    <button className="bg-orange-500 text-black px-6 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all">POST</button>
-                                </div>
+                                {currentUser ? (
+                                    <div className="flex gap-2">
+                                        <input placeholder="WRITE A COMMENT..." value={msg} onChange={e => setMsg(e.target.value)} className="flex-1 bg-black border border-white/10 p-3 rounded-xl text-white text-[10px] font-bold outline-none focus:border-orange-500" required />
+                                        <button className="bg-orange-500 text-black px-6 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all">POST</button>
+                                    </div>
+                                ) : (
+                                    <button type="button" onClick={onOpenAuth} className="w-full bg-white text-black p-3 rounded-xl font-black text-[10px] uppercase hover:bg-orange-500 transition-all">LOGIN TO POST COMMENT</button>
+                                )}
                             </form>
                         </div>
                     </SectionWrapper>

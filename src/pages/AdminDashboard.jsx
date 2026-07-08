@@ -9,6 +9,7 @@ export default function AdminDashboard() {
 
     // Data States
     const [projects, setProjects] = useState([]);
+    const [experiences, setExperiences] = useState([]);
     const [skills, setSkills] = useState([]);
     const [certificates, setCertificates] = useState([]);
     const [blogs, setBlogs] = useState([]);
@@ -22,15 +23,26 @@ export default function AdminDashboard() {
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
-        const savedUser = localStorage.getItem('portfolio_user');
-        if (savedUser) {
-            const userData = JSON.parse(savedUser);
-            if (userData.role === 'admin') {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = '/';
+                return;
+            }
+
+            // Fetch user profile to check role
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+            
+            if (profile && profile.role === 'admin') {
                 setIsAuthenticated(true);
-                setUser(userData);
+                setUser(profile);
                 fetchData();
-            } else { window.location.href = '/'; }
-        } else { window.location.href = '/'; }
+            } else {
+                window.location.href = '/';
+            }
+        };
+
+        checkAuth();
     }, []);
 
     const fetchData = async () => {
@@ -39,6 +51,7 @@ export default function AdminDashboard() {
         const { data: c } = await supabase.from('comments').select('*').order('created_at', { ascending: false });
         const { data: m } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
         const { data: b } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
+        const { data: e } = await supabase.from('experiences').select('*').order('start_date', { ascending: false });
         // Assume certificates are stored in a separate table
         const { data: certs } = await supabase.from('certificates').select('*');
 
@@ -47,6 +60,7 @@ export default function AdminDashboard() {
         if (c) setComments(c);
         if (m) setMessages(m);
         if (b) setBlogs(b);
+        if (e) setExperiences(e);
         if (certs) setCertificates(certs);
     };
 
@@ -131,6 +145,7 @@ export default function AdminDashboard() {
                 {/* NAVIGATION TABS */}
                 <div className="flex flex-wrap gap-2 mb-8">
                     <TabButton id="projects" label="Projects" />
+                    <TabButton id="experiences" label="Experiences" />
                     <TabButton id="certificates" label="Certificates" />
                     <TabButton id="skills" label="Skills" />
                     <TabButton id="blogs" label="Blogs" />
@@ -158,6 +173,20 @@ export default function AdminDashboard() {
                                 <div className="flex gap-4">
                                     <button onClick={() => { setEditingItem(p); setFormData(p); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase">Edit</button>
                                     <button onClick={() => deleteItem('projects', p.id)} className="text-[10px] font-black text-red-500 uppercase">Delete</button>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* EXPERIENCES RENDER */}
+                        {activeTab === 'experiences' && experiences.map(e => (
+                            <div key={e.id} className="bg-black/40 p-6 rounded-2xl border border-white/5 flex justify-between items-center group hover:border-cyan-500/30 transition-all">
+                                <div>
+                                    <h3 className="font-black text-sm uppercase text-white">{e.role}</h3>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">{e.company} • {e.start_date} - {e.end_date}</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={() => { setEditingItem(e); setFormData(e); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase">Edit</button>
+                                    <button onClick={() => deleteItem('experiences', e.id)} className="text-[10px] font-black text-red-500 uppercase">Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -256,6 +285,18 @@ export default function AdminDashboard() {
                                             <input placeholder="LIVE LINK" value={formData.link_url || ''} onChange={e => setFormData({...formData, link_url: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
                                             <input placeholder="SOURCE CODE LINK" value={formData.code_url || ''} onChange={e => setFormData({...formData, code_url: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
                                         </div>
+                                    </>
+                                )}
+
+                                {activeTab === 'experiences' && (
+                                    <>
+                                        <input placeholder="COMPANY NAME" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <input placeholder="ROLE / POSITION" value={formData.role || ''} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input placeholder="START DATE (e.g. Jan 2023)" value={formData.start_date || ''} onChange={e => setFormData({...formData, start_date: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                            <input placeholder="END DATE (e.g. Present)" value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        </div>
+                                        <textarea placeholder="DESCRIPTION" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-32" required />
                                     </>
                                 )}
 

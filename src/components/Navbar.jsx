@@ -20,12 +20,14 @@ export default function Navbar({ onOpenAuth }) {
     }, []);
     
     useEffect(() => {
-        const savedUser = localStorage.getItem('portfolio_user');
-        if (savedUser) {
-            const userData = JSON.parse(savedUser);
-            setUser(userData);
-            fetchProfile(userData.id);
-        }
+        const fetchSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setUser(session.user);
+                fetchProfile(session.user.id);
+            }
+        };
+        fetchSession();
     }, []);
 
     const fetchProfile = async (userId) => {
@@ -59,7 +61,6 @@ export default function Navbar({ onOpenAuth }) {
             if (updateError) throw updateError;
 
             setProfile({ ...profile, avatar_url: publicUrl });
-            localStorage.setItem('portfolio_user', JSON.stringify({ ...user, avatar_url: publicUrl }));
             alert("Profile Picture Updated!");
         } catch (error) {
             alert(error.message);
@@ -68,8 +69,8 @@ export default function Navbar({ onOpenAuth }) {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('portfolio_user');
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
         window.location.reload();
     };
 
@@ -78,8 +79,8 @@ export default function Navbar({ onOpenAuth }) {
             <nav 
                 className={`pointer-events-auto flex items-center border border-white/10 shadow-2xl backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] w-max max-w-full ${
                     isScrolled 
-                    ? 'bg-black/95 py-2 px-6 rounded-[9999px] gap-4' 
-                    : 'bg-black/80 py-4 px-12 rounded-[32px] gap-10 lg:gap-16'
+                    ? 'bg-black/95 py-2 px-4 md:px-6 rounded-[9999px] gap-2 md:gap-4' 
+                    : 'bg-black/80 py-4 px-6 md:px-8 rounded-[32px] gap-4 md:gap-8'
                 }`}
             >
                 
@@ -87,9 +88,9 @@ export default function Navbar({ onOpenAuth }) {
                     <span className="text-sm font-black tracking-tighter text-white">ATS<span className="text-orange-500">.</span></span>
                 </div>
 
-                <div className="hidden sm:flex items-center gap-1">
-                    {['home', 'about', 'projects', 'contact'].map((item) => (
-                        <a key={item} href={`#${item}`} className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white px-4 py-2 transition-all">{t[`nav_${item}`]}</a>
+                <div className="hidden sm:flex items-center gap-0 md:gap-1">
+                    {['home', 'about', 'experience', 'projects', 'contact'].map((item) => (
+                        <a key={item} href={`#${item}`} className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white px-2 md:px-3 py-2 transition-all">{t[`nav_${item}`]}</a>
                     ))}
                 </div>
 

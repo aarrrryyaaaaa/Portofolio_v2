@@ -2,6 +2,7 @@ export const translations = {
     en: {
         nav_home: "Home",
         nav_about: "About",
+        nav_experience: "Experience",
         nav_projects: "Projects",
         nav_blog: "Blog",
         nav_contact: "Contact",
@@ -52,6 +53,7 @@ export const translations = {
     id: {
         nav_home: "Beranda",
         nav_about: "Tentang",
+        nav_experience: "Pengalaman",
         nav_projects: "Proyek",
         nav_blog: "Blog",
         nav_contact: "Kontak",

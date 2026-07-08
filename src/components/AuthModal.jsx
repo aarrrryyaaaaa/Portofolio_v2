@@ -7,7 +7,6 @@ export default function AuthModal({ isOpen, onClose }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
-    const [adminKey, setAdminKey] = useState(''); // New: Admin Key field
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -15,30 +14,37 @@ export default function AuthModal({ isOpen, onClose }) {
         setLoading(true);
         try {
             if (isLogin) {
-                const { data, error } = await supabase.from('profiles').select('*').eq('email', email).eq('password', password).maybeSingle();
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
                 if (error) throw error;
-                if (!data) throw new Error("Invalid email or password");
-                localStorage.setItem('portfolio_user', JSON.stringify(data));
                 window.location.reload();
             } else {
-                const id = crypto.randomUUID();
-                // Check if the provided key matches the Master Email or a specific secret from .env
-                const isMaster = email === import.meta.env.VITE_MASTER_EMAIL;
-                const envKey = import.meta.env.VITE_ADMIN_KEY;
-                const isAdmin = (adminKey.trim() === envKey) || (adminKey.trim() === 'ADMIN_ARYA_MASTER'); 
-                const role = (isMaster || isAdmin) ? 'admin' : 'user';
-
-                const { error } = await supabase.from('profiles').insert([{ 
-                    id, 
-                    email, 
-                    password, 
-                    full_name: fullName, 
-                    role: role, 
-                    created_at: new Date(),
-                    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + id
-                }]);
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                        }
+                    }
+                });
                 if (error) throw error;
-                alert(`Account created as ${role}! Please login.`);
+                
+                // If user is created, manually add to profiles table for public display (comments etc)
+                if (data.user) {
+                    await supabase.from('profiles').upsert([{ 
+                        id: data.user.id, 
+                        email, 
+                        full_name: fullName, 
+                        role: 'user', // Default to user. Admins will be granted manually in DB
+                        created_at: new Date(),
+                        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + data.user.id
+                    }]);
+                }
+                
+                alert("Account created! You can now login.");
                 setIsLogin(true);
             }
         } catch (err) { alert(err.message); }
@@ -62,13 +68,6 @@ export default function AuthModal({ isOpen, onClose }) {
                                 )}
                                 <input type="email" placeholder="EMAIL ADDRESS" value={email} onChange={e => setEmail(e.target.value)} required className="w-full bg-black border border-white/10 p-4 rounded-2xl text-white text-[10px] font-black outline-none focus:border-cyan-500 transition-all" />
                                 <input type="password" placeholder="PASSWORD" value={password} onChange={e => setPassword(e.target.value)} required className="w-full bg-black border border-white/10 p-4 rounded-2xl text-white text-[10px] font-black outline-none focus:border-cyan-500 transition-all" />
-                                
-                                {!isLogin && (
-                                    <div className="pt-2">
-                                        <p className="text-[8px] text-gray-600 font-black mb-2 uppercase ml-1">Optional: Admin Authorization Key</p>
-                                        <input type="password" placeholder="ADMIN KEY" value={adminKey} onChange={e => setAdminKey(e.target.value)} className="w-full bg-black/40 border border-white/5 p-4 rounded-2xl text-cyan-500 text-[10px] font-black outline-none focus:border-cyan-500 transition-all" />
-                                    </div>
-                                )}
                                 
                                 <button disabled={loading} className="w-full bg-cyan-500 hover:bg-white text-black py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-cyan-500/20 active:scale-95 mt-4">
                                     {loading ? 'PROCESSING...' : (isLogin ? 'LOGIN' : 'SIGN UP')}
