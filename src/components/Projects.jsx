@@ -24,6 +24,7 @@ export default function Projects() {
     const [projects, setProjects] = useState([]);
     const [skills, setSkills] = useState([]);
     const [certificates, setCertificates] = useState([]);
+    const [settings, setSettings] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null);
     const [selectedCert, setSelectedCert] = useState(null);
     const [isLandscape, setIsLandscape] = useState(false);
@@ -47,12 +48,18 @@ export default function Projects() {
             const { data: p, error: pErr } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
             const { data: s, error: sErr } = await supabase.from('skills').select('*').order('level', { ascending: false });
             const { data: c, error: cErr } = await supabase.from('certificates').select('*');
+            const { data: setts } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
 
             if (cErr) console.error("Certificates fetch error:", cErr);
 
-            setProjects(p || []);
-            setSkills(s || []);
-            setCertificates(c || []);
+            // Filter out items where is_visible is explicitly false
+            setProjects((p || []).filter(item => item.is_visible !== false));
+            setSkills((s || []).filter(item => item.is_visible !== false));
+            setCertificates((c || []).filter(item => item.is_visible !== false));
+            
+            if (setts) {
+                setSettings(setts);
+            }
 
         } catch (error) {
             console.error("Error fetching data:", error);

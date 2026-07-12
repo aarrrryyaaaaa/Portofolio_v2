@@ -12,9 +12,9 @@ export default function AdminDashboard() {
     const [experiences, setExperiences] = useState([]);
     const [skills, setSkills] = useState([]);
     const [certificates, setCertificates] = useState([]);
-    const [blogs, setBlogs] = useState([]);
     const [comments, setComments] = useState([]);
     const [messages, setMessages] = useState([]);
+    const [settings, setSettings] = useState({});
 
     // CMS Form States
     const [showModal, setShowModal] = useState(false);
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
 
             // Fetch user profile to check role
             const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            
+
             if (profile && profile.role === 'admin') {
                 setIsAuthenticated(true);
                 setUser(profile);
@@ -50,25 +50,25 @@ export default function AdminDashboard() {
         const { data: s } = await supabase.from('skills').select('*').order('level', { ascending: false });
         const { data: c } = await supabase.from('comments').select('*').order('created_at', { ascending: false });
         const { data: m } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-        const { data: b } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
         const { data: e } = await supabase.from('experiences').select('*').order('start_date', { ascending: false });
         // Assume certificates are stored in a separate table
         const { data: certs } = await supabase.from('certificates').select('*');
+        const { data: setts } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
 
         if (p) setProjects(p);
         if (s) setSkills(s);
         if (c) setComments(c);
         if (m) setMessages(m);
-        if (b) setBlogs(b);
         if (e) setExperiences(e);
         if (certs) setCertificates(certs);
+        if (setts) setSettings(setts);
     };
 
     const handleFileUpload = async (event, fieldName) => {
         try {
             setUploading(true);
             if (!event.target.files || event.target.files.length === 0) return;
-            
+
             const file = event.target.files[0];
             if (file.size > 5 * 1024 * 1024) throw new Error('File is too large! Maximum size is 5MB.');
 
@@ -81,7 +81,7 @@ export default function AdminDashboard() {
 
             const { data: { publicUrl } } = supabase.storage.from('portfolio_assets').getPublicUrl(filePath);
 
-            setFormData(prev => ({...prev, [fieldName]: publicUrl}));
+            setFormData(prev => ({ ...prev, [fieldName]: publicUrl }));
             alert("File uploaded successfully!");
         } catch (error) {
             alert(error.message);
@@ -95,22 +95,34 @@ export default function AdminDashboard() {
         if (!error) fetchData();
     };
 
+    const toggleVisibility = async (table, item) => {
+        const newVisibility = item.is_visible === false ? true : false;
+        const { error } = await supabase.from(table).update({ is_visible: newVisibility }).eq('id', item.id);
+        if (!error) fetchData();
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const table = activeTab;
-            if (editingItem) {
+            if (table === 'settings') {
+                const { error } = await supabase.from('site_settings').upsert([{ id: 1, ...settings }]);
+                if (error) throw error;
+                alert("Settings updated successfully!");
+            } else if (editingItem) {
                 const { error } = await supabase.from(table).update(formData).eq('id', editingItem.id);
                 if (error) throw error;
+                setShowModal(false);
+                alert("Content updated successfully!");
             } else {
                 const { error } = await supabase.from(table).insert([formData]);
                 if (error) throw error;
+                setShowModal(false);
+                alert("Content created successfully!");
             }
-            setShowModal(false);
             setEditingItem(null);
             setFormData({});
             fetchData();
-            alert("Content updated successfully!");
         } catch (err) { alert(err.message); }
     };
 
@@ -123,7 +135,7 @@ export default function AdminDashboard() {
     if (!isAuthenticated) return <div className="min-h-screen bg-black flex items-center justify-center text-white font-black tracking-widest uppercase">Checking Authorization...</div>;
 
     const TabButton = ({ id, label }) => (
-        <button 
+        <button
             onClick={() => setActiveTab(id)}
             className={`px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === id ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20' : 'bg-white/5 text-gray-500 border border-white/5 hover:border-white/20'}`}
         >
@@ -148,16 +160,16 @@ export default function AdminDashboard() {
                     <TabButton id="experiences" label="Experiences" />
                     <TabButton id="certificates" label="Certificates" />
                     <TabButton id="skills" label="Skills" />
-                    <TabButton id="blogs" label="Blogs" />
                     <TabButton id="comments" label="Comments" />
                     <TabButton id="messages" label="Inquiries" />
+                    <TabButton id="settings" label="Settings" />
                 </div>
 
                 {/* CONTENT AREA */}
                 <div className="bg-zinc-900 border border-white/5 rounded-[40px] p-8 shadow-2xl overflow-hidden min-h-[600px]">
                     <div className="flex justify-between items-center mb-8 pb-8 border-b border-white/5">
                         <h2 className="text-3xl font-black uppercase tracking-tighter italic">{activeTab} Management</h2>
-                        {!['messages', 'comments'].includes(activeTab) && (
+                        {!['messages', 'comments', 'settings'].includes(activeTab) && (
                             <button onClick={() => { setEditingItem(null); setFormData({}); setShowModal(true); }} className="bg-cyan-500 text-black px-6 py-2 rounded-full text-[10px] font-black uppercase hover:bg-white transition-all">Add New {activeTab}</button>
                         )}
                     </div>
@@ -170,9 +182,15 @@ export default function AdminDashboard() {
                                     <h3 className="font-black text-sm uppercase text-white">{p.title}</h3>
                                     <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">{p.description}</p>
                                 </div>
-                                <div className="flex gap-4">
-                                    <button onClick={() => { setEditingItem(p); setFormData(p); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase">Edit</button>
-                                    <button onClick={() => deleteItem('projects', p.id)} className="text-[10px] font-black text-red-500 uppercase">Delete</button>
+                                <div className="flex gap-4 items-center">
+                                    <div className="flex items-center gap-2 mr-2 cursor-pointer group" onClick={() => toggleVisibility('projects', p)}>
+                                        <span className={`text-[8px] font-black uppercase transition-colors ${p.is_visible === false ? 'text-gray-500 group-hover:text-white' : 'text-cyan-500'}`}>{p.is_visible === false ? 'HIDDEN' : 'VISIBLE'}</span>
+                                        <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${p.is_visible === false ? 'bg-gray-700 group-hover:bg-gray-600' : 'bg-cyan-500'}`}>
+                                            <div className={`w-3 h-3 rounded-full bg-white transition-transform shadow-sm ${p.is_visible === false ? 'translate-x-0' : 'translate-x-4'}`} />
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setEditingItem(p); setFormData(p); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase hover:text-white transition-colors">Edit</button>
+                                    <button onClick={() => deleteItem('projects', p.id)} className="text-[10px] font-black text-red-500 uppercase hover:text-red-400 transition-colors">Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -184,9 +202,15 @@ export default function AdminDashboard() {
                                     <h3 className="font-black text-sm uppercase text-white">{e.role}</h3>
                                     <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">{e.company} • {e.start_date} - {e.end_date}</p>
                                 </div>
-                                <div className="flex gap-4">
-                                    <button onClick={() => { setEditingItem(e); setFormData(e); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase">Edit</button>
-                                    <button onClick={() => deleteItem('experiences', e.id)} className="text-[10px] font-black text-red-500 uppercase">Delete</button>
+                                <div className="flex gap-4 items-center">
+                                    <div className="flex items-center gap-2 mr-2 cursor-pointer group" onClick={() => toggleVisibility('experiences', e)}>
+                                        <span className={`text-[8px] font-black uppercase transition-colors ${e.is_visible === false ? 'text-gray-500 group-hover:text-white' : 'text-cyan-500'}`}>{e.is_visible === false ? 'HIDDEN' : 'VISIBLE'}</span>
+                                        <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${e.is_visible === false ? 'bg-gray-700 group-hover:bg-gray-600' : 'bg-cyan-500'}`}>
+                                            <div className={`w-3 h-3 rounded-full bg-white transition-transform shadow-sm ${e.is_visible === false ? 'translate-x-0' : 'translate-x-4'}`} />
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setEditingItem(e); setFormData(e); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase hover:text-white transition-colors">Edit</button>
+                                    <button onClick={() => deleteItem('experiences', e.id)} className="text-[10px] font-black text-red-500 uppercase hover:text-red-400 transition-colors">Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -201,9 +225,15 @@ export default function AdminDashboard() {
                                         <p className="text-[10px] text-cyan-500/50 font-bold uppercase">Level: {s.level}%</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-4">
-                                    <button onClick={() => { setEditingItem(s); setFormData(s); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase">Edit</button>
-                                    <button onClick={() => deleteItem('skills', s.id)} className="text-[10px] font-black text-red-500 uppercase">Delete</button>
+                                <div className="flex gap-4 items-center">
+                                    <div className="flex items-center gap-2 mr-2 cursor-pointer group" onClick={() => toggleVisibility('skills', s)}>
+                                        <span className={`text-[8px] font-black uppercase transition-colors ${s.is_visible === false ? 'text-gray-500 group-hover:text-white' : 'text-cyan-500'}`}>{s.is_visible === false ? 'HIDDEN' : 'VISIBLE'}</span>
+                                        <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${s.is_visible === false ? 'bg-gray-700 group-hover:bg-gray-600' : 'bg-cyan-500'}`}>
+                                            <div className={`w-3 h-3 rounded-full bg-white transition-transform shadow-sm ${s.is_visible === false ? 'translate-x-0' : 'translate-x-4'}`} />
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setEditingItem(s); setFormData(s); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase hover:text-white transition-colors">Edit</button>
+                                    <button onClick={() => deleteItem('skills', s.id)} className="text-[10px] font-black text-red-500 uppercase hover:text-red-400 transition-colors">Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -215,9 +245,15 @@ export default function AdminDashboard() {
                                     <h3 className="font-black text-sm uppercase text-white">{c.name}</h3>
                                     <p className="text-[10px] text-gray-500 font-bold uppercase">{c.issuer} • {c.year}</p>
                                 </div>
-                                <div className="flex gap-4">
-                                    <button onClick={() => { setEditingItem(c); setFormData(c); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase">Edit</button>
-                                    <button onClick={() => deleteItem('certificates', c.id)} className="text-[10px] font-black text-red-500 uppercase">Delete</button>
+                                <div className="flex gap-4 items-center">
+                                    <div className="flex items-center gap-2 mr-2 cursor-pointer group" onClick={() => toggleVisibility('certificates', c)}>
+                                        <span className={`text-[8px] font-black uppercase transition-colors ${c.is_visible === false ? 'text-gray-500 group-hover:text-white' : 'text-cyan-500'}`}>{c.is_visible === false ? 'HIDDEN' : 'VISIBLE'}</span>
+                                        <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${c.is_visible === false ? 'bg-gray-700 group-hover:bg-gray-600' : 'bg-cyan-500'}`}>
+                                            <div className={`w-3 h-3 rounded-full bg-white transition-transform shadow-sm ${c.is_visible === false ? 'translate-x-0' : 'translate-x-4'}`} />
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setEditingItem(c); setFormData(c); setShowModal(true); }} className="text-[10px] font-black text-cyan-500 uppercase hover:text-white transition-colors">Edit</button>
+                                    <button onClick={() => deleteItem('certificates', c.id)} className="text-[10px] font-black text-red-500 uppercase hover:text-red-400 transition-colors">Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -258,6 +294,49 @@ export default function AdminDashboard() {
                                 <p className="text-[8px] text-gray-600 font-bold uppercase mt-4 text-right">{new Date(m.created_at).toLocaleString()}</p>
                             </div>
                         ))}
+
+                        {/* SETTINGS RENDER */}
+                        {activeTab === 'settings' && (
+                            <div className="bg-[#0a0a0a] p-8 md:p-12 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+                                <form onSubmit={handleSubmit} className="space-y-10 relative z-10">
+                                    <div className="space-y-8">
+                                        <div className="flex items-center gap-4 border-b border-white/10 pb-4">
+                                            <span className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-500">📖</span>
+                                            <h3 className="text-xl font-black uppercase tracking-widest text-white">Halaman About (EN & ID)</h3>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-orange-500 border-b border-orange-500/20 pb-2">English (EN)</h4>
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Description (EN)</label>
+                                                    <textarea placeholder="Write something about you..." value={settings.about_desc_en || ''} onChange={e => setSettings({...settings, about_desc_en: e.target.value})} className="w-full bg-black/50 border border-white/10 p-4 rounded-xl text-xs font-medium text-gray-300 outline-none focus:border-cyan-500 transition-all h-32 resize-none shadow-inner" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Quote (EN)</label>
+                                                    <input placeholder="Your favorite quote..." value={settings.about_quote_en || ''} onChange={e => setSettings({...settings, about_quote_en: e.target.value})} className="w-full bg-black/50 border border-white/10 p-4 rounded-xl text-xs font-medium text-gray-300 outline-none focus:border-cyan-500 transition-all shadow-inner" />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-cyan-500 border-b border-cyan-500/20 pb-2">Indonesia (ID)</h4>
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Deskripsi (ID)</label>
+                                                    <textarea placeholder="Tulis sesuatu tentang Anda..." value={settings.about_desc_id || ''} onChange={e => setSettings({...settings, about_desc_id: e.target.value})} className="w-full bg-black/50 border border-white/10 p-4 rounded-xl text-xs font-medium text-gray-300 outline-none focus:border-cyan-500 transition-all h-32 resize-none shadow-inner" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Kutipan (ID)</label>
+                                                    <input placeholder="Kutipan favorit Anda..." value={settings.about_quote_id || ''} onChange={e => setSettings({...settings, about_quote_id: e.target.value})} className="w-full bg-black/50 border border-white/10 p-4 rounded-xl text-xs font-medium text-gray-300 outline-none focus:border-cyan-500 transition-all shadow-inner" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:from-cyan-500 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/25 mt-8 hover:scale-[1.01] active:scale-[0.99]">Simpan Pengaturan</button>
+                                </form>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -269,50 +348,50 @@ export default function AdminDashboard() {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
                         <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-zinc-900 border border-white/10 p-10 rounded-[40px] w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                             <h2 className="text-3xl font-black uppercase tracking-tighter mb-8 italic">Managing <span className="text-cyan-500">{activeTab}</span></h2>
-                            
+
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 {activeTab === 'projects' && (
                                     <>
-                                        <input placeholder="TITLE" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
-                                        <textarea placeholder="DESCRIPTION" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-24" required />
+                                        <input placeholder="TITLE" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <textarea placeholder="DESCRIPTION" value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-24" required />
                                         <div className="w-full bg-black border border-white/10 p-4 rounded-xl">
                                             <label className="block text-[10px] text-gray-500 font-bold uppercase mb-2">PROJECT IMAGE (MAX 5MB)</label>
                                             <input type="file" accept="image/*,application/pdf" onChange={e => handleFileUpload(e, 'image_url')} className="w-full text-xs font-bold text-white outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-cyan-500 file:text-black hover:file:bg-white transition-all cursor-pointer" disabled={uploading} />
                                             {formData.image_url && <p className="text-[10px] text-cyan-500 mt-2 truncate">Current: {formData.image_url}</p>}
                                         </div>
-                                        <textarea placeholder="DETAILS (EXTENDED CONTENT)" value={formData.details || ''} onChange={e => setFormData({...formData, details: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-32" />
+                                        <textarea placeholder="DETAILS (EXTENDED CONTENT)" value={formData.details || ''} onChange={e => setFormData({ ...formData, details: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-32" />
                                         <div className="grid grid-cols-2 gap-4">
-                                            <input placeholder="LIVE LINK" value={formData.link_url || ''} onChange={e => setFormData({...formData, link_url: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
-                                            <input placeholder="SOURCE CODE LINK" value={formData.code_url || ''} onChange={e => setFormData({...formData, code_url: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
+                                            <input placeholder="LIVE LINK" value={formData.link_url || ''} onChange={e => setFormData({ ...formData, link_url: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
+                                            <input placeholder="SOURCE CODE LINK" value={formData.code_url || ''} onChange={e => setFormData({ ...formData, code_url: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
                                         </div>
                                     </>
                                 )}
 
                                 {activeTab === 'experiences' && (
                                     <>
-                                        <input placeholder="COMPANY NAME" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
-                                        <input placeholder="ROLE / POSITION" value={formData.role || ''} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <input placeholder="COMPANY NAME" value={formData.company || ''} onChange={e => setFormData({ ...formData, company: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <input placeholder="ROLE / POSITION" value={formData.role || ''} onChange={e => setFormData({ ...formData, role: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
                                         <div className="grid grid-cols-2 gap-4">
-                                            <input placeholder="START DATE (e.g. Jan 2023)" value={formData.start_date || ''} onChange={e => setFormData({...formData, start_date: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
-                                            <input placeholder="END DATE (e.g. Present)" value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                            <input placeholder="START DATE (e.g. Jan 2023)" value={formData.start_date || ''} onChange={e => setFormData({ ...formData, start_date: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                            <input placeholder="END DATE (e.g. Present)" value={formData.end_date || ''} onChange={e => setFormData({ ...formData, end_date: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
                                         </div>
-                                        <textarea placeholder="DESCRIPTION" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-32" required />
+                                        <textarea placeholder="DESCRIPTION" value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-32" required />
                                     </>
                                 )}
 
                                 {activeTab === 'skills' && (
                                     <>
-                                        <input placeholder="SKILL NAME" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
-                                        <select value={formData.category || 'fe'} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500">
+                                        <input placeholder="SKILL NAME" value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <select value={formData.category || 'fe'} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500">
                                             <option value="fe">Frontend</option>
                                             <option value="be">Backend</option>
                                             <option value="db">Database</option>
                                             <option value="tools">Tools / Others</option>
                                         </select>
-                                        <input placeholder="ICON URL (SVG/PNG)" value={formData.icon_url || ''} onChange={e => setFormData({...formData, icon_url: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
-                                        <input type="number" placeholder="LEVEL (%)" value={formData.level || ''} onChange={e => setFormData({...formData, level: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
+                                        <input placeholder="ICON URL (SVG/PNG)" value={formData.icon_url || ''} onChange={e => setFormData({ ...formData, icon_url: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
+                                        <input type="number" placeholder="LEVEL (%)" value={formData.level || ''} onChange={e => setFormData({ ...formData, level: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
                                         <label className="flex items-center gap-3 bg-black border border-white/10 p-4 rounded-xl cursor-pointer hover:border-cyan-500 transition-all">
-                                            <input type="checkbox" checked={formData.show_on_about || false} onChange={e => setFormData({...formData, show_on_about: e.target.checked})} className="w-4 h-4 accent-cyan-500" />
+                                            <input type="checkbox" checked={formData.show_on_about || false} onChange={e => setFormData({ ...formData, show_on_about: e.target.checked })} className="w-4 h-4 accent-cyan-500" />
                                             <span className="text-xs font-bold text-white uppercase">Tampilkan di Halaman About (Core Tech)</span>
                                         </label>
                                     </>
@@ -320,9 +399,9 @@ export default function AdminDashboard() {
 
                                 {activeTab === 'certificates' && (
                                     <>
-                                        <input placeholder="CERTIFICATE TITLE" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
-                                        <input placeholder="ISSUER" value={formData.issuer || ''} onChange={e => setFormData({...formData, issuer: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
-                                        <input placeholder="YEAR" value={formData.year || ''} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
+                                        <input placeholder="CERTIFICATE TITLE" value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <input placeholder="ISSUER" value={formData.issuer || ''} onChange={e => setFormData({ ...formData, issuer: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" required />
+                                        <input placeholder="YEAR" value={formData.year || ''} onChange={e => setFormData({ ...formData, year: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500" />
                                         <div className="w-full bg-black border border-white/10 p-4 rounded-xl">
                                             <label className="block text-[10px] text-gray-500 font-bold uppercase mb-2">CERTIFICATE IMAGE/PDF (MAX 5MB)</label>
                                             <input type="file" accept="image/*,application/pdf" onChange={e => handleFileUpload(e, 'image_url')} className="w-full text-xs font-bold text-white outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-cyan-500 file:text-black hover:file:bg-white transition-all cursor-pointer" disabled={uploading} />
@@ -334,8 +413,8 @@ export default function AdminDashboard() {
                                 {activeTab === 'comments' && (
                                     <>
                                         <p className="text-[10px] text-gray-500 font-bold uppercase mb-4">You are editing a comment by: {formData.name}</p>
-                                        <textarea placeholder="COMMENT MESSAGE" value={formData.message || ''} onChange={e => setFormData({...formData, message: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-32" required />
-                                        <textarea placeholder="ADMIN REPLY" value={formData.admin_reply || ''} onChange={e => setFormData({...formData, admin_reply: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-cyan-500 outline-none focus:border-cyan-500 h-24" />
+                                        <textarea placeholder="COMMENT MESSAGE" value={formData.message || ''} onChange={e => setFormData({ ...formData, message: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-cyan-500 h-32" required />
+                                        <textarea placeholder="ADMIN REPLY" value={formData.admin_reply || ''} onChange={e => setFormData({ ...formData, admin_reply: e.target.value })} className="w-full bg-black border border-white/10 p-4 rounded-xl text-xs font-bold text-cyan-500 outline-none focus:border-cyan-500 h-24" />
                                     </>
                                 )}
 

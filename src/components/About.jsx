@@ -18,10 +18,11 @@ const SectionWrapper = ({ children, delay = 0 }) => (
 );
 
 export default function About() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [projectCount, setProjectCount] = useState(0);
     const [certCount, setCertCount] = useState(0);
     const [featuredSkills, setFeaturedSkills] = useState([]);
+    const [settings, setSettings] = useState(null);
 
     useEffect(() => {
         const fetchAboutData = async () => {
@@ -34,6 +35,9 @@ export default function About() {
 
                 const { data: skills } = await supabase.from('skills').select('*').eq('show_on_about', true).order('level', { ascending: false });
                 if (skills) setFeaturedSkills(skills);
+
+                const { data: setts } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
+                if (setts) setSettings(setts);
             } catch (error) {
                 console.error("Error fetching about data:", error);
             }
@@ -66,7 +70,7 @@ export default function About() {
                         </h2>
 
                         <p className="text-gray-400 text-lg leading-relaxed mb-6">
-                            {t.about_desc}
+                            {(language === 'id' ? settings?.about_desc_id : settings?.about_desc_en) || t.about_desc}
                         </p>
 
                         {/* Download CV Button Moved Here */}
@@ -91,7 +95,7 @@ export default function About() {
                             className="border-l-4 border-orange-500 pl-4 py-2 italic text-gray-300 mb-8 bg-orange-900/10 rounded-r shadow-sm"
                         >
                             <span className="text-orange-400 font-bold text-lg">"</span>
-                            {t.about_quote}
+                            {(language === 'id' ? settings?.about_quote_id : settings?.about_quote_en) || t.about_quote}
                             <span className="text-orange-400 font-bold text-lg">"</span>
                             <motion.div
                                 initial={{ width: 0 }}

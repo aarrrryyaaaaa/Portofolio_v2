@@ -14,7 +14,11 @@ export default function Experience() {
                 .select('*')
                 .order('start_date', { ascending: false });
             
-            if (data) setExperiences(data);
+            if (error) {
+                console.error("Error fetching experiences:", error);
+            } else {
+                setExperiences((data || []).filter(item => item.is_visible !== false));
+            }
             setLoading(false);
         };
         fetchExperiences();
