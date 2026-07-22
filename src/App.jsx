@@ -48,7 +48,7 @@ export default function App() {
                     </main>
 
                     <footer className="py-8 text-center text-gray-500 text-sm border-t border-gray-800/50 backdrop-blur">
-                        © 2026 Arya Toni Saputra
+                        © 2024 Arya Toni Saputra
                     </footer>
                 </div>
             )}
